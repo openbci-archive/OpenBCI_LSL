@@ -441,44 +441,92 @@ class GUI(QtGui.QWidget):
 
   def board_config(self):
     self.config_widget = Board_Config_Widget(parent=self)
-    self.config_widget.setGeometry(QtCore.QRect(100,100,400,200))
+    # self.config_widget.setGeometry(QtCore.QRect(100,100,400,200))
     self.config_widget.show()
 
 class Board_Config_Widget(QtGui.QWidget):
   def __init__(self,parent=None):
     QtGui.QWidget.__init__(self)
     self.parent = parent
+    self.setFixedSize(700,450)
+    self.setWindowTitle("Board Configuration Window")
     self.set_layout()
   
-  def set_layout(self):
-    option_headers = []
-
-    layout = QtGui.QGridLayout()
-    channel_options_layout = QtGui.QGridLayout()
+  def set_layout(self):    
+    self.layout = QtGui.QGridLayout()
+    self.channel_options_layout = QtGui.QGridLayout()
 
     verticalLine0 = QtGui.QFrame()
     verticalLine0.setFrameShape(QtGui.QFrame().HLine)
     verticalLine0.setFrameShadow(QtGui.QFrame().Sunken)
+    verticalLine1 = QtGui.QFrame()
+    verticalLine1.setFrameShape(QtGui.QFrame().HLine)
+    verticalLine1.setFrameShadow(QtGui.QFrame().Sunken)
 
-    #title font
+    #Title
+    title = QtGui.QLabel("Board Settings")
     title_font = QtGui.QFont('default',weight=QtGui.QFont.Bold)
     title_font.setPointSize(12)
-    header_font = QtGui.QFont('default',weight=QtGui.QFont.Bold)
-    header_font.setPointSize(8)
-    #Header
-    title = QtGui.QLabel("Board Settings")
     title.setFont(title_font)
 
     #Channel Numbers
     number_label = QtGui.QLabel("Channels")
     self.chan_8 = QtGui.QRadioButton("8")
     self.chan_16 = QtGui.QRadioButton("16")
-
+    self.chan_8.toggled.connect(self.hide_channel)
+    self.chan_16.toggled.connect(self.add_channel)
+  
     number_of_chans = int(self.parent.stream1_channels_entry.text())
     if number_of_chans == 16:
       self.chan_16.setChecked(True)
     else:
       self.chan_8.setChecked(True)
+
+    #SD Card Options
+    sd_label = QtGui.QLabel("SD Card Record:")
+    sd_entry = QtGui.QComboBox()
+    sd_entry.addItem("None")
+    sd_entry.addItem("5 MIN")
+    sd_entry.addItem("15 MIN")
+    sd_entry.addItem("30 MIN")
+    sd_entry.addItem("1 HR")
+    sd_entry.addItem("2 HR")
+    sd_entry.addItem("4 HR")
+    sd_entry.addItem("12 HR")
+    sd_entry.addItem("24 HR")
+    sd_entry.addItem("14 SEC")
+
+    #Save Button
+    save_button = QtGui.QPushButton("Save Settings")
+
+    #Set rest of the layout
+    self.layout.addWidget(title,0,0)
+    self.layout.addWidget(verticalLine0,1,0,1,4)
+    self.layout.addWidget(number_label,2,0)
+    self.layout.addWidget(self.chan_8,2,1)
+    self.layout.addWidget(self.chan_16,2,2)
+    self.set_channel_options_layout()
+    self.layout.addLayout(self.channel_options_layout,3,0,1,4)
+    self.layout.addWidget(sd_label,4,0)
+    self.layout.addWidget(sd_entry,4,1)
+    self.layout.addWidget(verticalLine1,5,0,1,4)
+    self.layout.addWidget(save_button,6,0,)
+    self.setLayout(self.layout)
+
+  def set_channel_options_layout(self):
+    option_headers = []
+    #Channel options
+    channels = OrderedDict()
+    channel_attributes = ['channel_label{}','power_entry{}','gain{}','input{}','bias{}','srb2{}','srb1{}']
+    self.NUM_ATTRIBUTES = len(channel_attributes)
+    if self.chan_16.isChecked:
+      number_of_chans = 8
+    else:
+      number_of_chans = 16
+
+    #header font
+    header_font = QtGui.QFont('default',weight=QtGui.QFont.Bold)
+    header_font.setPointSize(8)
 
     #Option Headers
     channel_number = QtGui.QLabel("CHANNEL")
@@ -496,9 +544,6 @@ class Board_Config_Widget(QtGui.QWidget):
     channel_srb1 = QtGui.QLabel("SRB1")
     option_headers.append(channel_srb1)
 
-    #Channel options
-    channels = {}
-    channel_attributes = ['channel_label{}','power_entry{}','gain{}','input{}','bias{}','srb2{}','srb1{}']
 
     # Iteratively add options for all channels.
     # There is a dictionary to hold all of the channels,
@@ -550,52 +595,42 @@ class Board_Config_Widget(QtGui.QWidget):
           channels[current][current_attribute].addItem("Disconnect")
           channels[current][current_attribute].addItem("Connect")
 
-    #SD Card Options
-    sd_label = QtGui.QLabel("SD Card Record:")
-    sd_entry = QtGui.QComboBox()
-    sd_entry.addItem("None")
-    sd_entry.addItem("5 MIN")
-    sd_entry.addItem("15 MIN")
-    sd_entry.addItem("30 MIN")
-    sd_entry.addItem("1 HR")
-    sd_entry.addItem("2 HR")
-    sd_entry.addItem("4 HR")
-    sd_entry.addItem("12 HR")
-    sd_entry.addItem("24 HR")
-    sd_entry.addItem("14 SEC")
-
-    #Save Button
-    save_button = QtGui.QPushButton("Save Settings")
-
-
-
     # Set channel options layout first
     # headers
     for header in option_headers:
       header.setFont(header_font)
     for i,header in enumerate(option_headers):
-      channel_options_layout.addWidget(header,2,i)
+      self.channel_options_layout.addWidget(header,2,i)
     # options
-    for i,ch in enumerate(sorted(channels)):
+    for i,ch in enumerate(channels):
       for j,attribute in enumerate(channels[ch]):
-        current = channels[ch][attribute]
-        channel_options_layout.addWidget(current,i+3,j)
+        if i < number_of_chans:
+          current = channels[ch][attribute]
+          self.channel_options_layout.addWidget(current,i+3,j)
+        else:
+          current = channels[ch][attribute]
+          current.hide()
+          self.channel_options_layout.addWidget(current,i+3,j)
 
 
-    #Set rest of the layout
-    layout.addWidget(title,0,0)
-    layout.addWidget(verticalLine0,1,0,1,4)
-    layout.addWidget(number_label,2,0)
-    layout.addWidget(self.chan_8,2,1)
-    layout.addWidget(self.chan_16,2,2)
-    layout.addLayout(channel_options_layout,3,0,1,4)
-    layout.addWidget(sd_label,4,0)
-    layout.addWidget(sd_entry,4,1)
-    layout.addWidget(save_button,5,0)
+  def add_channel(self):
+    for i in range(11,19):
+      for j in range(self.NUM_ATTRIBUTES):
+        try:
+          self.channel_options_layout.itemAtPosition(i,j).widget().show()
+        except:
+          pass
+    self.setFixedSize(700,715)
 
-    
-    self.setLayout(layout)
-
+  def hide_channel(self):
+    for i in range(11,19):
+      for j in range(self.NUM_ATTRIBUTES):
+        try:
+          self.channel_options_layout.itemAtPosition(i,j).widget().hide()
+          self.layout.setSizeConstraint(QtGui.QLayout.setFixedSize)
+        except:
+          pass
+    self.setFixedSize(700,450)
 
 def main(argv):
   if not argv:
