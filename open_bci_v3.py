@@ -176,10 +176,10 @@ class OpenBCIBoard(object):
           call(sample)
 
       
-      # if(lapse > 0 and timeit.default_timer() - start_time > lapse):
-      #   self.stop();
-      # if self.log:
-      #   self.log_packet_count = self.log_packet_count + 1;
+      if(lapse > 0 and timeit.default_timer() - start_time > lapse):
+        self.stop();
+      if self.log:
+        self.log_packet_count = self.log_packet_count + 1;
   
   
   """
@@ -208,7 +208,6 @@ class OpenBCIBoard(object):
       if self.read_state == 0:
         
         b = read(1)
-        
         if struct.unpack('B', b)[0] == START_BYTE:
           if(rep != 0):
             self.warn('Skipped %d bytes before start found' %(rep))
@@ -284,17 +283,13 @@ class OpenBCIBoard(object):
 
   """
   def stop(self):
-    print("Stopping streaming...\nWait for buffer to flush...")
     self.streaming = False
     self.ser.write(b's')
-    if self.log:
-      logging.warning('sent <s>: stopped streaming')
 
   def disconnect(self):
     if(self.streaming == True):
       self.stop()
     if (self.ser.isOpen()):
-      # print("Closing Serial...")
       self.ser.close()
        
 
@@ -329,7 +324,7 @@ class OpenBCIBoard(object):
       c = ''
      #Look for end sequence $$$
       while '$$$' not in line:
-        c = self.ser.read().decode('utf-8')
+        c = self.ser.read().decode('utf-8', errors='replace')
         line += c
         if "On Daisy" in line:
           self.daisy = True
@@ -355,7 +350,7 @@ class OpenBCIBoard(object):
       c = ''
      #Look for end sequence $$$
       while '$$$' not in line:
-        c = serial.read().decode('utf-8')
+        c = serial.read().decode('utf-8', errors='replace')
         line += c
       if "OpenBCI" in line:
         return True
@@ -438,12 +433,12 @@ class OpenBCIBoard(object):
 
 
   def check_connection(self, interval = 2, max_packets_to_skip=10):
-    #check number of dropped packages and establish connection problem if too large
-    # if self.packets_dropped > max_packets_to_skip:
-    #   #if error, attempt to reconect
-    #   self.reconnect()
-    # # check again again in 2 seconds
-    # threading.Timer(interval, self.check_connection).start()
+    # check number of dropped packages and establish connection problem if too large
+    if self.packets_dropped > max_packets_to_skip:
+      #if error, attempt to reconect
+      self.reconnect()
+    # check again again in 2 seconds
+    threading.Timer(interval, self.check_connection).start()
     pass
 
   def reconnect(self):

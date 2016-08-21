@@ -4,7 +4,7 @@ import threading
 from PyQt4 import QtGui,QtCore
 import lsl_openbci
 import open_bci_v3 as bci
-
+import time
 
 class GUI(QtGui.QWidget):
   def __init__(self):
@@ -16,7 +16,6 @@ class GUI(QtGui.QWidget):
     
   def gui_setup(self):
     self.setWindowTitle("OpenBCI - Lab Streaming Layer")
-    # self.resize(520, 400)
     self.setFixedSize(500,460)
     self.find_defaults()
     self.set_layout()
@@ -210,21 +209,33 @@ class GUI(QtGui.QWidget):
       self.sample_rate = 250
 
   def connect_board(self):
+    self.console.setText("  Searching for board...")
+
+    # Get port
     port = self.port_entry.text()
+
+    #Throw error if port is at not specified ('--')
+    if port == "--":
+      self.console.setText("  Error: No Port Specified")
+      print("Error: No Port Specified")
+      return
+    #Get daisy setting
     if self.daisy_entry.currentIndex:
       daisy=False
     else:
       daisy=True
     try:
       self.lsl.initialize_board(port=port,daisy=daisy)
-      self.lsl.set_board_settings()
-      self.start_button.setEnabled(True)
-      self.console.setText("  Board connected. Ready to stream")
-      self.connect_button.setText("Disconnect")
-      self.connect_button.clicked.disconnect(self.connect_board)
-      self.connect_button.clicked.connect(self.disconnect_board)
     except:
-       self.console.setText("  Error connecting to the board")
+      self.console.setText("  Error connecting to the board") 
+      return
+    
+    self.lsl.set_board_settings()
+    self.start_button.setEnabled(True)
+    self.console.setText("  Board connected. Ready to stream")
+    self.connect_button.setText("Disconnect")
+    self.connect_button.clicked.disconnect(self.connect_board)
+    self.connect_button.clicked.connect(self.disconnect_board)
   
   def disconnect_board(self):
     self.lsl.board.disconnect()
@@ -280,8 +291,8 @@ class GUI(QtGui.QWidget):
     self.start_button.clicked.connect(self.stop_streaming)
 
   def stop_streaming(self):
-    self.lsl.stop_streaming()
     self.console.setText("  Streaming paused.")
+    self.lsl.stop_streaming()
     self.start_button.setText("Resume Streaming")
     self.start_button.clicked.disconnect(self.stop_streaming)
     self.start_button.clicked.connect(self.start_streaming)
