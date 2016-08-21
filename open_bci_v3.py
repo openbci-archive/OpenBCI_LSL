@@ -294,7 +294,7 @@ class OpenBCIBoard(object):
     if(self.streaming == True):
       self.stop()
     if (self.ser.isOpen()):
-      print("Closing Serial...")
+      # print("Closing Serial...")
       self.ser.close()
        
 
@@ -361,7 +361,7 @@ class OpenBCIBoard(object):
         return True
     return False
 
-  def print_register_settings(self,):
+  def print_register_settings(self):
     self.ser.write(b'?')
     time.sleep(0.5)
     self.print_incoming_text(True);
