@@ -7,13 +7,22 @@ from PyQt4 import QtGui,QtCore
 from pylsl import StreamInfo,StreamOutlet
 import signal
 from collections import OrderedDict
+import time
 
 
 class StreamerLSL():
 
     def __init__(self,GUI=False):
+      self.default_settings = OrderedDict()
+      self.current_settings = OrderedDict()
+      self.eeg_channels = 8
+      self.aux_channels = 3
+
       if not GUI:
         self.initialize_board(autodetect=True)
+
+      self.init_board_settings()
+
         
     def initialize_board(self,autodetect=False,port=None,daisy=None):
       print ("\n-------INSTANTIATING BOARD-------")
@@ -25,6 +34,36 @@ class StreamerLSL():
       self.aux_channels = self.board.getNbAUXChannels()
       self.sample_rate = self.board.getSampleRate()
       print('{} EEG channels and {} AUX channels at {} Hz'.format(self.eeg_channels, self.aux_channels,self.sample_rate))
+
+    def init_board_settings(self):
+      #set default board configuration
+      if self.eeg_channels == 16:
+        self.default_settings["Number_Channels"] = [b'C']
+      else:
+        self.default_settings["Number_Channels"] = [b'c']
+      for i in range(16):
+        current = "channel{}".format(i+1)
+        self.default_settings[current] = []
+        self.default_settings[current].append(b'x')
+        self.default_settings[current].append(str(i+1).encode())
+        self.default_settings[current].append(b'0')           
+        self.default_settings[current].append(b'6')
+        self.default_settings[current].append(b'0')
+        self.default_settings[current].append(b'1')
+        self.default_settings[current].append(b'1')
+        self.default_settings[current].append(b'0')
+        self.default_settings[current].append(b'X')
+      self.default_settings["SD_Card"] = b" "
+      self.current_settings = self.default_settings.copy()
+   
+    def set_board_settings(self):
+      for item in self.current_settings:
+        if self.current_settings[item] != self.default_settings[item]:
+          print(item)
+          print(self.current_settings[item])
+          for byte in self.current_settings[item]:
+            self.board.ser.write(byte)
+            time.sleep(.2)
 
 
     def send(self,sample):
@@ -205,7 +244,7 @@ class GUI(QtGui.QWidget):
     self.port_entry.setText(self.port)
 
     #DAISY
-    daisy_label = QtGui.QLabel("Daisy")
+    daisy_label = QtGui.QLabel("Daisy (16 chan)")
     self.daisy_entry = QtGui.QComboBox()
     self.daisy_entry.addItem("Enabled")
     self.daisy_entry.addItem("Disabled")
@@ -379,6 +418,9 @@ class GUI(QtGui.QWidget):
       self.console.setText("  Board connected. Ready to stream")
     except:
        self.console.setText("  Error connecting to the board")
+
+    self.lsl.set_board_settings()
+    self.lsl.board.print_register_settings()
   
   def disconnect_board(self):
     self.lsl.board.disconnect()
@@ -387,8 +429,9 @@ class GUI(QtGui.QWidget):
 
     self.connect_button.clicked.disconnect(self.disconnect_board)
     self.connect_button.clicked.connect(self.connect_board)
-    self.start_button.clicked.disconnect(self.stop_streaming)
-    self.start_button.clicked.connect(self.start_streaming)
+    if self.start_button.text() == "Stop Streaming": 
+      self.start_button.clicked.disconnect(self.stop_streaming)
+      self.start_button.clicked.connect(self.start_streaming)
     self.start_button.setEnabled(False)
     self.start_button.setText("Start Streaming")
 
@@ -448,7 +491,8 @@ class Board_Config_Widget(QtGui.QWidget):
   def __init__(self,parent=None):
     QtGui.QWidget.__init__(self)
     self.parent = parent
-    self.setFixedSize(700,450)
+    self.lsl = parent.lsl
+    self.setFixedSize(700,715)
     self.setWindowTitle("Board Configuration Window")
     self.set_layout()
   
@@ -462,67 +506,66 @@ class Board_Config_Widget(QtGui.QWidget):
     verticalLine1 = QtGui.QFrame()
     verticalLine1.setFrameShape(QtGui.QFrame().HLine)
     verticalLine1.setFrameShadow(QtGui.QFrame().Sunken)
-
+    verticalLine2 = QtGui.QFrame()
+    verticalLine2.setFrameShape(QtGui.QFrame().HLine)
+    verticalLine2.setFrameShadow(QtGui.QFrame().Sunken)
     #Title
     title = QtGui.QLabel("Board Settings")
     title_font = QtGui.QFont('default',weight=QtGui.QFont.Bold)
     title_font.setPointSize(12)
     title.setFont(title_font)
 
-    #Channel Numbers
-    number_label = QtGui.QLabel("Channels")
-    self.chan_8 = QtGui.QRadioButton("8")
-    self.chan_16 = QtGui.QRadioButton("16")
-    self.chan_8.toggled.connect(self.hide_channel)
-    self.chan_16.toggled.connect(self.add_channel)
   
     number_of_chans = int(self.parent.stream1_channels_entry.text())
-    if number_of_chans == 16:
-      self.chan_16.setChecked(True)
+
+    if self.parent.daisy_entry.currentIndex() == 0:
+      daisy = True
     else:
-      self.chan_8.setChecked(True)
+      daisy = False
+    #Channel Number
+    if daisy:
+      channel_number = QtGui.QLabel("Number of Channels: {}  [Daisy {}]".format("16", "Enabled"))
+    else:
+      channel_number = QtGui.QLabel("Number of Channels: {}  [Daisy {}]".format("8", "Disabled"))
+
 
     #SD Card Options
     sd_label = QtGui.QLabel("SD Card Record:")
-    sd_entry = QtGui.QComboBox()
-    sd_entry.addItem("None")
-    sd_entry.addItem("5 MIN")
-    sd_entry.addItem("15 MIN")
-    sd_entry.addItem("30 MIN")
-    sd_entry.addItem("1 HR")
-    sd_entry.addItem("2 HR")
-    sd_entry.addItem("4 HR")
-    sd_entry.addItem("12 HR")
-    sd_entry.addItem("24 HR")
-    sd_entry.addItem("14 SEC")
+    self.sd_entry = QtGui.QComboBox()
+    self.sd_entry.addItem("None")
+    self.sd_entry.addItem("5 MIN")
+    self.sd_entry.addItem("15 MIN")
+    self.sd_entry.addItem("30 MIN")
+    self.sd_entry.addItem("1 HR")
+    self.sd_entry.addItem("2 HR")
+    self.sd_entry.addItem("4 HR")
+    self.sd_entry.addItem("12 HR")
+    self.sd_entry.addItem("24 HR")
+    self.sd_entry.addItem("14 SEC")
 
     #Save Button
     save_button = QtGui.QPushButton("Save Settings")
+    save_button.clicked.connect(self.save_settings)
 
     #Set rest of the layout
     self.layout.addWidget(title,0,0)
     self.layout.addWidget(verticalLine0,1,0,1,4)
-    self.layout.addWidget(number_label,2,0)
-    self.layout.addWidget(self.chan_8,2,1)
-    self.layout.addWidget(self.chan_16,2,2)
+    self.layout.addWidget(channel_number,2,0)
+    self.layout.addWidget(verticalLine2,3,0,1,4)
     self.set_channel_options_layout()
-    self.layout.addLayout(self.channel_options_layout,3,0,1,4)
-    self.layout.addWidget(sd_label,4,0)
-    self.layout.addWidget(sd_entry,4,1)
-    self.layout.addWidget(verticalLine1,5,0,1,4)
-    self.layout.addWidget(save_button,6,0,)
+    self.layout.addLayout(self.channel_options_layout,4,0,1,4)
+    self.layout.addWidget(sd_label,5,0)
+    self.layout.addWidget(self.sd_entry,5,1)
+    self.layout.addWidget(verticalLine1,6,0,1,4)
+    self.layout.addWidget(save_button,7,0,)
     self.setLayout(self.layout)
 
   def set_channel_options_layout(self):
     option_headers = []
     #Channel options
-    channels = OrderedDict()
-    channel_attributes = ['channel_label{}','power_entry{}','gain{}','input{}','bias{}','srb2{}','srb1{}']
-    self.NUM_ATTRIBUTES = len(channel_attributes)
-    if self.chan_16.isChecked:
-      number_of_chans = 8
-    else:
-      number_of_chans = 16
+    self.channels = OrderedDict()
+    self.channel_attributes = ['channel_label{}','power_entry{}','gain{}','input{}','bias{}','srb2{}','srb1{}']
+    self.NUM_ATTRIBUTES = len(self.channel_attributes)
 
     #header font
     header_font = QtGui.QFont('default',weight=QtGui.QFont.Bold)
@@ -552,85 +595,147 @@ class Board_Config_Widget(QtGui.QWidget):
     # things out.
     for i in range(16):
       current = "channel{}".format(i+1)
-      channels[current] = OrderedDict()
-      for j,attribute in enumerate(channel_attributes):
-        channels[current][attribute.format(i+1)] = ''
+      self.channels[current] = OrderedDict()
+      for j,attribute in enumerate(self.channel_attributes):
+        self.channels[current][attribute.format(i+1)] = ''
         current_attribute = attribute.format(i+1)
         if j == 0:
-          channels[current][current_attribute] = QtGui.QLabel("Channel {}".format(i+1))
+          self.channels[current][current_attribute] = QtGui.QLabel("Channel {}".format(i+1))
         elif j == 1:
-          channels[current][current_attribute] = QtGui.QComboBox()
-          channels[current][current_attribute].addItem("On")
-          channels[current][current_attribute].addItem("Off")
+          self.channels[current][current_attribute] = QtGui.QComboBox()
+          self.channels[current][current_attribute].addItem("On")
+          self.channels[current][current_attribute].addItem("Off")
+          index = int((self.lsl.current_settings[current][j+1]).decode())
+          self.channels[current][current_attribute].setCurrentIndex(index)
         elif j == 2:
-          channels[current][current_attribute] = QtGui.QComboBox()
-          channels[current][current_attribute].addItem("0")
-          channels[current][current_attribute].addItem("2")
-          channels[current][current_attribute].addItem("4")
-          channels[current][current_attribute].addItem("6")
-          channels[current][current_attribute].addItem("8")
-          channels[current][current_attribute].addItem("12")
-          channels[current][current_attribute].addItem("24")
-          channels[current][current_attribute].setCurrentIndex(6)
+          self.channels[current][current_attribute] = QtGui.QComboBox()
+          self.channels[current][current_attribute].addItem("0")
+          self.channels[current][current_attribute].addItem("2")
+          self.channels[current][current_attribute].addItem("4")
+          self.channels[current][current_attribute].addItem("6")
+          self.channels[current][current_attribute].addItem("8")
+          self.channels[current][current_attribute].addItem("12")
+          self.channels[current][current_attribute].addItem("24")
+          index = int((self.lsl.current_settings[current][j+1]).decode())
+          self.channels[current][current_attribute].setCurrentIndex(index)
         elif j == 3:
-          channels[current][current_attribute] = QtGui.QComboBox()
-          channels[current][current_attribute].addItem("Normal")
-          channels[current][current_attribute].addItem("Shorted")
-          channels[current][current_attribute].addItem("Bias Meas")
-          channels[current][current_attribute].addItem("MVDD")
-          channels[current][current_attribute].addItem("Temp")
-          channels[current][current_attribute].addItem("Test Sig")
-          channels[current][current_attribute].addItem("Bias DRP")
-          channels[current][current_attribute].addItem("Bias DRN")
+          self.channels[current][current_attribute] = QtGui.QComboBox()
+          self.channels[current][current_attribute].addItem("Normal")
+          self.channels[current][current_attribute].addItem("Shorted")
+          self.channels[current][current_attribute].addItem("Bias Meas")
+          self.channels[current][current_attribute].addItem("MVDD")
+          self.channels[current][current_attribute].addItem("Temp")
+          self.channels[current][current_attribute].addItem("Test Sig")
+          self.channels[current][current_attribute].addItem("Bias DRP")
+          self.channels[current][current_attribute].addItem("Bias DRN")
+          index = int((self.lsl.current_settings[current][j+1]).decode())
+          self.channels[current][current_attribute].setCurrentIndex(index)
         elif j == 4:
-          channels[current][current_attribute] = QtGui.QComboBox()
-          channels[current][current_attribute].addItem("Include")
-          channels[current][current_attribute].addItem("Don't Include")
+          self.channels[current][current_attribute] = QtGui.QComboBox()
+          self.channels[current][current_attribute].addItem("Include")
+          self.channels[current][current_attribute].addItem("Don't Include")
+          index = 1 - int((self.lsl.current_settings[current][j+1]).decode())
+          self.channels[current][current_attribute].setCurrentIndex(index)
         elif j == 5:
-          channels[current][current_attribute] = QtGui.QComboBox()
-          channels[current][current_attribute].addItem("Connect")
-          channels[current][current_attribute].addItem("Disconnect")
+          self.channels[current][current_attribute] = QtGui.QComboBox()
+          self.channels[current][current_attribute].addItem("Connect")
+          self.channels[current][current_attribute].addItem("Disconnect")
+          index = 1 - int((self.lsl.current_settings[current][j+1]).decode())
+          self.channels[current][current_attribute].setCurrentIndex(index)
         elif j == 6:
-          channels[current][current_attribute] = QtGui.QComboBox()
-          channels[current][current_attribute].addItem("Disconnect")
-          channels[current][current_attribute].addItem("Connect")
+          self.channels[current][current_attribute] = QtGui.QComboBox()
+          self.channels[current][current_attribute].addItem("Disconnect")
+          self.channels[current][current_attribute].addItem("Connect")
+          index = int((self.lsl.current_settings[current][j+1]).decode())
+          self.channels[current][current_attribute].setCurrentIndex(index)
 
-    # Set channel options layout first
-    # headers
+
+    # Set channel options layout
+    # Set the headers
     for header in option_headers:
       header.setFont(header_font)
     for i,header in enumerate(option_headers):
       self.channel_options_layout.addWidget(header,2,i)
-    # options
-    for i,ch in enumerate(channels):
-      for j,attribute in enumerate(channels[ch]):
-        if i < number_of_chans:
-          current = channels[ch][attribute]
+    # Set the options
+    for i,ch in enumerate(self.channels):
+      for j,attribute in enumerate(self.channels[ch]):
+        if self.parent.daisy_entry.currentIndex() == 0:
+          current = self.channels[ch][attribute]
           self.channel_options_layout.addWidget(current,i+3,j)
+          self.setFixedSize(700,715)
+
         else:
-          current = channels[ch][attribute]
-          current.hide()
-          self.channel_options_layout.addWidget(current,i+3,j)
+          if i < 8:
+            current = self.channels[ch][attribute]
+            self.channel_options_layout.addWidget(current,i+3,j)
+          else:
+            current = self.channels[ch][attribute]
+            current.hide()
+            self.channel_options_layout.addWidget(current,i+3,j)
+          self.setFixedSize(700,450)
 
 
-  def add_channel(self):
-    for i in range(11,19):
-      for j in range(self.NUM_ATTRIBUTES):
-        try:
-          self.channel_options_layout.itemAtPosition(i,j).widget().show()
-        except:
-          pass
-    self.setFixedSize(700,715)
+  def channel_number_select(self):
+    print(self.parent.daisy_entry.currentIndex())
+    # if 
+    #   for i in range(11,19):
+    #     for j in range(self.NUM_ATTRIBUTES):
+    #         self.channel_options_layout.itemAtPosition(i,j).widget().show()
+    #     self.channel_options_layout.itemAtPosition(i,1).widget().setCurrentIndex(0)
+    #   # self.setFixedSize(700,715)
+    # elif self.parent.daisy_entry.currentIndex() == 1:
+    #   for i in range(11,19):
+    #     for j in range(self.NUM_ATTRIBUTES):
+    #         self.channel_options_layout.itemAtPosition(i,j).widget().hide()
+    #   self.channel_options_layout.itemAtPosition(i,1).widget().setCurrentIndex(1)
+        # 
+    # except:
+    #   pass
 
-  def hide_channel(self):
-    for i in range(11,19):
-      for j in range(self.NUM_ATTRIBUTES):
-        try:
-          self.channel_options_layout.itemAtPosition(i,j).widget().hide()
-          self.layout.setSizeConstraint(QtGui.QLayout.setFixedSize)
-        except:
-          pass
-    self.setFixedSize(700,450)
+  def save_settings(self):
+
+    self.settings = OrderedDict()
+    sd_commands = [b" ", b'A', b'S', b'F',b'G',b'H',b'J',b'K',b'L']
+
+    #Channel number
+    if self.parent.daisy_entry() == 1:
+      self.settings['Number_Channels'] = [b'c']
+      channel_number = 8
+    elif self.parent.daisy_entry() == 0:
+      self.settings['Number_Channels'] = [b'C']
+      channel_number = 16
+
+
+    for i in range(16):
+      current = "channel{}".format(i+1)
+      self.settings[current] = []
+      self.settings[current].append(b'x')
+      self.settings[current].append(str.encode(str(i+1)))
+      for j,attribute in enumerate(self.channel_attributes):
+        temp = self.channels[current][attribute.format(i+1)]
+        if j == 1:
+            self.settings[current].append(str(temp.currentIndex()).encode())
+        elif j == 2:
+          self.settings[current].append(str(temp.currentIndex()).encode())
+        elif j == 3:
+          self.settings[current].append(str(temp.currentIndex()).encode())
+        elif j == 4:
+          self.settings[current].append(str(1-temp.currentIndex()).encode())
+        elif j == 5:
+          self.settings[current].append(str(1-temp.currentIndex()).encode())
+        elif j == 6:
+          self.settings[current].append(str(temp.currentIndex()).encode())  
+      self.settings[current].append(b'X')
+
+    sd_index = self.sd_entry.currentIndex()
+    self.settings["SD_Card"] = [sd_commands[sd_index]]
+
+
+    for item in self.settings:
+      if self.settings[item] != self.parent.lsl.current_settings[item]:
+        self.parent.lsl.current_settings[item] = self.settings[item]
+    self.close()
+
 
 def main(argv):
   if not argv:
