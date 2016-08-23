@@ -1,11 +1,13 @@
 OpenBCI_LSL
 ==============
 
+****Currently Under Development****
+
 This tutorial contains information on how to stream [OpenBCI](http://openbci.com/) data through the [Lab Streaming Layer (LSL)](https://github.com/sccn/labstreaminglayer) network protocol.
 
 Lab streaming layer is a networking system for real time streaming, recording, and analysis of time-series data. LSL can be used to connect OpenBCI to applications that can record, analyze, and manipulate the data, such as Matlab, NeuroPype, BCILAB, and others.
 
-The [OpenBCI_LSL](link) repo contains a Python script that establishes an LSL stream of OpenBCI data, and also the libraries and files needed to run LSL.
+The [OpenBCI_LSL](link) repo contains a Python script that establishes an LSL stream of OpenBCI data, as well as the libraries and files needed to run LSL.
 
 
 # SETUP
@@ -31,11 +33,7 @@ The [OpenBCI_LSL](link) repo contains a Python script that establishes an LSL st
 
 If you would like to start an OpenBCI stream with the default board settings, go the the "OpenBCI_LSL" folder and simply type the following command:
 
-`python openbci_lsl.py -stream`
-
-You should see the following output in terminal:
-
-[picture]
+`python openbci_lsl.py --stream`
 
 After board initialization, you are now ready to start streaming.
 
@@ -51,9 +49,6 @@ If you get an error message at any point, check the [Troubleshooting](#troublesh
 If you would like the ability to configure the board and LSL stream with advanced settings, you can do so by running the GUI. The GUI comes up by default if you run the program with no flags:
 
 `python openbci_lsl.py`
-
-[picture of GUI]
-
 
 # Troubleshooting
 
