@@ -285,7 +285,7 @@ class GUI(QtGui.QWidget):
 
   def start_streaming(self):
     self.lsl.start_streaming()
-    self.console.setText("  Streaming data")
+    self.console.setText("  Streaming data.")
     self.start_button.setText("Stop Streaming")
     self.start_button.clicked.disconnect(self.start_streaming)
     self.start_button.clicked.connect(self.stop_streaming)

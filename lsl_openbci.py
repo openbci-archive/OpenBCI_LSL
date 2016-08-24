@@ -39,7 +39,6 @@ class StreamerLSL():
       self.eeg_channels = self.board.getNbEEGChannels()
       self.aux_channels = self.board.getNbAUXChannels()
       self.sample_rate = self.board.getSampleRate()
-      print('{} EEG channels and {} AUX channels at {} Hz'.format(self.eeg_channels, self.aux_channels,self.sample_rate))
 
     def init_board_settings(self):
       #set default board configuration
@@ -88,7 +87,8 @@ class StreamerLSL():
         self.outlet_eeg = StreamOutlet(info_eeg)
         self.outlet_aux = StreamOutlet(info_aux)
       
-      print ("LSL Configuration: \n" + \
+      print ("--------------------------------------\n"+ \
+            "LSL Configuration: \n" + \
             "  Stream 1: \n" + \
             "      Name: OpenBCI_EEG \n" + \
             "      Type: EEG \n" + \
@@ -102,7 +102,8 @@ class StreamerLSL():
             "      Channel Count: " + str(self.aux_channels) + "\n" + \
             "      Sampling Rate: " + str(self.sample_rate) + "\n" + \
             "      Channel Format: float32 \n" + \
-            "      Source Id: openbci_aux_id1 \n \n")
+            "      Source Id: openbci_aux_id1 \n" + \
+            "---------------------------------------\n")
 
     def cleanUp():
         board.disconnect()
@@ -113,7 +114,7 @@ class StreamerLSL():
       boardThread = threading.Thread(target=self.board.start_streaming,args=(self.send,-1))
       boardThread.daemon = True # will stop on exit
       boardThread.start()
-      print("Streaming data...")
+      print("Current streaming: {} EEG channels and {} AUX channels at {} Hz\n".format(self.eeg_channels, self.aux_channels,self.sample_rate))
     def stop_streaming(self):
       self.board.stop()
 
@@ -128,7 +129,7 @@ class StreamerLSL():
         time.sleep(0.001)
         if (c == '\n'):
             line = ''
-
+      print("Streaming paused.\n")
 
     def begin(self):
         print ("--------------INFO---------------")
