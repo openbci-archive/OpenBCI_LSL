@@ -33,11 +33,21 @@ The [OpenBCI_LSL](link) repo contains a Python script that establishes an LSL st
 
 First, make sure your dongle is plugged in and board is powered on. Then go the the "OpenBCI_LSL" folder and type the following command:
 
-`python openbci_lsl.py --stream`
+`python lsl_openbci.py --stream`
 
 After a few moments, you should see this output:
 
-	![CLI](./images/CLI.jpg)
+![cli](https://raw.githubusercontent.com/gabrielibagon/OpenBCI_LSL/master/images/CLI.jpg)
+
+
+If an error is raised about not being able to find your the board or serial port, you can override the automatic board detection by specifying the serial port in a command line argument before "--stream". The format is as follows:
+
+`python lsl_openbci.py [PORT] --stream`
+
+For example:
+
+`python lsl_openbci.py /dev/ttyUSB0 --stream`
+
 
 After board initialization, you are now ready to start streaming.
 
@@ -47,7 +57,7 @@ To stop streaming, type `/stop`
 
 To disconnect from the serial port, type `/exit` 
 
-Remember to use `\exit` to disconnect the board as you end the program, to ensure that the serial port is safely closed.
+Remember to use `/exit` to disconnect the board as you end the program, to ensure that the serial port is safely closed.
 
 #### Configuring the board from the command line interface
 
@@ -67,11 +77,11 @@ If you get an error message at any point while using the command line interface,
 
 If you would like the ability to configure the board and LSL stream with advanced settings, you can do so by running the GUI. The GUI comes up by default if you run the program with no flags:
 
-`python openbci_lsl.py`
+`python lsl_openbci.py`
 
 If you plug in your board and dongle before running the above command, the program should have already detected the appropriate settings for your board (port and daisy). If not, you can enter those yourself in the appropriate fields.
 
-	![GUI](./images/GUI.jpg)
+![gui](https://raw.githubusercontent.com/gabrielibagon/OpenBCI_LSL/master/images/GUI.jpg)
 
 #### Streaming
 To stream data, make sure the appropriate Port, Daisy, and LSL Stream fields are filled in correctly. Then, press "Connect" and then "Start Streaming". To pause streaming, click "Stop Streaming". To disconnect the board, press "Disconnect".

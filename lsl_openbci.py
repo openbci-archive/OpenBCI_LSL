@@ -19,7 +19,7 @@ import time
 
 class StreamerLSL():
 
-    def __init__(self,GUI=False):
+    def __init__(self,port=None,GUI=False):
       self.default_settings = OrderedDict()
       self.current_settings = OrderedDict()
 
@@ -28,7 +28,11 @@ class StreamerLSL():
       self.aux_channels = 3
 
       if not GUI:
-        self.initialize_board(autodetect=True)
+        if port is None:
+          self.initialize_board(autodetect=True)
+        else:
+          self.initialize_board(port=port)
+
       self.init_board_settings()
 
         
@@ -38,7 +42,7 @@ class StreamerLSL():
       if autodetect:
         self.board = bci.OpenBCIBoard()
       else:
-        self.board = bci.OpenBCIBoard(port,daisy)
+        self.board = bci.OpenBCIBoard(port=port)
       self.eeg_channels = self.board.getNbEEGChannels()
       self.aux_channels = self.board.getNbAUXChannels()
       self.sample_rate = self.board.getSampleRate()
@@ -269,12 +273,19 @@ def main(argv):
     app = QtGui.QApplication(sys.argv)
     window = gui.GUI()
     sys.exit(app.exec_())
-  elif argv[0] == '--stream':
-    lsl = StreamerLSL(GUI=False)
-    lsl.create_lsl()
-    lsl.begin()
   else:
-    print("Command '%s' not recognized" % argv[0])
+    if argv[0] == '--stream':
+      lsl = StreamerLSL(GUI=False)
+      lsl.create_lsl()
+      lsl.begin()
+    else:
+      port = argv[0]
+      if argv[1] == '--stream':
+        lsl = StreamerLSL(port=port,GUI=False)
+        lsl.create_lsl()
+        lsl.begin()
+  # else:
+  #   print("Command '%s' not recognized" % argv[0])
 
 if __name__ == '__main__':
   main(sys.argv[1:])
