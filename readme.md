@@ -39,48 +39,7 @@ First, make sure your dongle is plugged in and board is powered on. Then go the 
 
 After a few moments, you should see this output:
 
-	![cli](OpenBCI_LSL
-==============
-
-This tutorial contains information on how to stream [OpenBCI](http://openbci.com/) data through the [Lab Streaming Layer (LSL)](https://github.com/sccn/labstreaminglayer) network protocol.
-
-Lab streaming layer is a networking system for real time streaming, recording, and analysis of time-series data. LSL can be used to connect OpenBCI to applications that can record, analyze, and manipulate the data, such as Matlab, NeuroPype, BCILAB, and others.
-
-The [OpenBCI_LSL](link) repo contains a Python script that establishes an LSL stream of OpenBCI data, as well as the libraries and files needed to run LSL.
-
-
-# SETUP
-
-1. **Download or clone the [OpenBCI_LSL](link) repo from Github**
-
-2. **Download and install [Python](https://www.python.org/downloads/) (either version 2 or 3).**
-
-	Python might already be installed on your computer. Type `python --version` to check if you have Python version 2.7+ installed. 
-
-3. **Install Python requirements**
-
-	Navigate to the "OpenBCI_LSL" folder on your command line and terminal, and type:
-
-	`pip install -r requirements.txt`
-
-	Note: If you get the message "pip: command not found", you need to install pip: `sudo easy_install pip`. Then retry the command above.
-	
-	To use the GUI features of this application, you must separately install PyQt4 using these instructions: [Install PyQt4](http://pyqt.sourceforge.net/Docs/PyQt4/installation.html). The command line version of this program is still functional if PyQt4 is not installed.
-
-
-# Usage
-
-## Command Line Interface
-
-#### Simple Stream
-
-First, make sure your dongle is plugged in and board is powered on. Then go the the "OpenBCI_LSL" folder and type the following command:
-
-`python openbci_lsl.py --stream`
-
-After a few moments, you should see this output:
-
-	![cli](https://raw.githubusercontent.com/gabrielibagon/OpenBCI_LSL/master/images/CLI.jpg)
+![cli](https://raw.githubusercontent.com/gabrielibagon/OpenBCI_LSL/master/images/CLI.jpg)
 
 After board initialization, you are now ready to start streaming.
 
@@ -114,7 +73,7 @@ If you would like the ability to configure the board and LSL stream with advance
 
 If you plug in your board and dongle before running the above command, the program should have already detected the appropriate settings for your board (port and daisy). If not, you can enter those yourself in the appropriate fields.
 
-	![gui](https://raw.githubusercontent.com/gabrielibagon/OpenBCI_LSL/master/images/GUI.jpg)
+![gui](https://raw.githubusercontent.com/gabrielibagon/OpenBCI_LSL/master/images/GUI.jpg)
 
 #### Streaming
 To stream data, make sure the appropriate Port, Daisy, and LSL Stream fields are filled in correctly. Then, press "Connect" and then "Start Streaming". To pause streaming, click "Stop Streaming". To disconnect the board, press "Disconnect".
