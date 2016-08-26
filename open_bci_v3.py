@@ -210,7 +210,7 @@ class OpenBCIBoard(object):
         b = read(1)
         if struct.unpack('B', b)[0] == START_BYTE:
           if(rep != 0):
-            self.warn('Skipped %d bytes before start found' %(rep))
+            # self.warn('Skipped %d bytes before start found' %(rep))
             rep = 0;
           packet_id = struct.unpack('B', read(1))[0] #packet id goes from 0-255
           log_bytes_in = str(packet_id);
@@ -330,8 +330,8 @@ class OpenBCIBoard(object):
           self.daisy = True
       if print_enable:
         print(line);
-    else:
-      self.warn("No Message")
+    # else:
+      # self.warn("No Message")
 
   def openbci_id(self, serial):
     """
