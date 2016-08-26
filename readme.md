@@ -49,7 +49,7 @@ To stop streaming, type `/stop`
 
 To disconnect from the serial port, type `/exit` 
 
-Remember to use `\exit` to disconnect the board as you end the program, to ensure that the serial port is safely closed.
+Remember to use `/exit` to disconnect the board as you end the program, to ensure that the serial port is safely closed.
 
 #### Configuring the board from the command line interface
 
