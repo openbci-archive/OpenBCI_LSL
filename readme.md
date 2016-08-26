@@ -39,7 +39,7 @@ First, make sure your dongle is plugged in and board is powered on. Then go the 
 
 After a few moments, you should see this output:
 
-	!(CLI)[./images/CLI.jpg]
+	![cli](./images/CLI.jpg)
 
 After board initialization, you are now ready to start streaming.
 
@@ -73,7 +73,7 @@ If you would like the ability to configure the board and LSL stream with advance
 
 If you plug in your board and dongle before running the above command, the program should have already detected the appropriate settings for your board (port and daisy). If not, you can enter those yourself in the appropriate fields.
 
-	!(GUI)[./images/GUI.jpg]
+	![gui](./images/GUI.jpg)
 
 #### Streaming
 To stream data, make sure the appropriate Port, Daisy, and LSL Stream fields are filled in correctly. Then, press "Connect" and then "Start Streaming". To pause streaming, click "Stop Streaming". To disconnect the board, press "Disconnect".
