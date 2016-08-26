@@ -1,10 +1,17 @@
 from collections import OrderedDict
 import signal
 import threading
-from PyQt4 import QtGui,QtCore
 import lsl_openbci
 import open_bci_v3 as bci
 import time
+import sys
+try:
+  from PyQt4 import QtGui,QtCore
+except ImportError:
+  print("GUI unavailable, use command line interface: \n" + \
+  "   python lsl_openbci.py --stream")
+  sys.exit(0)
+
 
 class GUI(QtGui.QWidget):
   def __init__(self):
@@ -227,7 +234,9 @@ class GUI(QtGui.QWidget):
     try:
       self.lsl.initialize_board(port=port,daisy=daisy)
     except:
-      self.console.setText("  Error connecting to the board") 
+      self.lsl.board.disconnect()  #close the serial
+      self.console.setText("  Error connecting to the board")
+      print("Error connecting to the board") 
       return
     
     self.lsl.set_board_settings()
@@ -239,36 +248,51 @@ class GUI(QtGui.QWidget):
   
   def disconnect_board(self):
     self.lsl.board.disconnect()
+    try:
+      self.lsl.outlet_eeg.close_stream()
+      self.lsl.outlet_eeg.close_stream()
+    except:
+      pass
     self.connect_button.setText("Connect")
     self.console.setText("  Board disconnected")
-
     self.connect_button.clicked.disconnect(self.disconnect_board)
     self.connect_button.clicked.connect(self.connect_board)
     if self.start_button.text() == "Stop Streaming": 
       self.start_button.clicked.disconnect(self.stop_streaming)
       self.start_button.clicked.connect(self.start_streaming)
+    elif self.start_button.text() == "Resume Streaming":
+      self.start_button.clicked.disconnect(self.start_streaming)
+      self.start_button.clicked.connect(self.init_streaming)
+    # elif self.start_button.text() == "Start Streaming":
+    #   self.start_button.clicked.disconnect(self.init_streaming)
+
     self.start_button.setEnabled(False)
     self.start_button.setText("Start Streaming")
 
 
   def init_streaming(self):
     #create LSL stream
-    stream1 = {
-        'name' : self.stream1_name_entry.text(),
-        'type' : self.stream1_type_entry.text(),
-        'channels' : int(self.stream1_channels_entry.text()),
-        'sample_rate' : float(self.stream1_hz_entry.text()),
-        'datatype' : self.stream1_datatype_entry.text(),
-        'id' : self.stream1_streamid_entry.text()
-    }
-    stream2 = {
-        'name' : self.stream2_name_entry.text(),
-        'type' : self.stream2_type_entry.text(),
-        'channels' : int(self.stream2_channels_entry.text()),
-        'sample_rate' : float(self.stream2_hz_entry.text()),
-        'datatype' : self.stream2_datatype_entry.text(),
-        'id' : self.stream2_streamid_entry.text()
-    }
+    try:
+      stream1 = {
+          'name' : self.stream1_name_entry.text(),
+          'type' : self.stream1_type_entry.text(),
+          'channels' : int(self.stream1_channels_entry.text()),
+          'sample_rate' : float(self.stream1_hz_entry.text()),
+          'datatype' : self.stream1_datatype_entry.text(),
+          'id' : self.stream1_streamid_entry.text()
+      }
+      stream2 = {
+          'name' : self.stream2_name_entry.text(),
+          'type' : self.stream2_type_entry.text(),
+          'channels' : int(self.stream2_channels_entry.text()),
+          'sample_rate' : float(self.stream2_hz_entry.text()),
+          'datatype' : self.stream2_datatype_entry.text(),
+          'id' : self.stream2_streamid_entry.text()
+      }
+    except:
+      self.console.setText("  LSL Error: check your inputs")
+      print("LSL Error: check your inputs")
+      return
     try:
       self.lsl.create_lsl(default=False,stream1=stream1,stream2=stream2)
     except:
@@ -277,6 +301,7 @@ class GUI(QtGui.QWidget):
       self.lsl.start_streaming()
     except:
       self.console.setText("  Streaming could not start. Check your board/dongle.")
+      return
     else:
       self.console.setText("  Streaming data")
     self.start_button.setText("Stop Streaming")
@@ -299,7 +324,6 @@ class GUI(QtGui.QWidget):
 
   def board_config(self):
     self.config_widget = Board_Config_Widget(parent=self)
-    # self.config_widget.setGeometry(QtCore.QRect(100,100,400,200))
     self.config_widget.show()
 
 class Board_Config_Widget(QtGui.QWidget):
