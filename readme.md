@@ -23,6 +23,8 @@ The [OpenBCI_LSL](link) repo contains a Python script that establishes an LSL st
 	`pip install -r requirements.txt`
 
 	Note: If you get the message "pip: command not found", you need to install pip: `sudo easy_install pip`. Then retry the command above.
+	
+	To use the GUI features of this application, you must separately install PyQt4 using these instructions: [Install PyQt4](http://pyqt.sourceforge.net/Docs/PyQt4/installation.html). The command line version of this program is still functional if PyQt4 is not installed.
 
 
 # Usage
@@ -39,7 +41,6 @@ After a few moments, you should see this output:
 
 ![cli](https://raw.githubusercontent.com/gabrielibagon/OpenBCI_LSL/master/images/CLI.jpg)
 
-
 If an error is raised about not being able to find your the board or serial port, you can override the automatic board detection by specifying the serial port in a command line argument before "--stream". The format is as follows:
 
 `python lsl_openbci.py [PORT] --stream`
@@ -47,7 +48,6 @@ If an error is raised about not being able to find your the board or serial port
 For example:
 
 `python lsl_openbci.py /dev/ttyUSB0 --stream`
-
 
 After board initialization, you are now ready to start streaming.
 
@@ -98,4 +98,3 @@ To change the channel settings, click on "Board Config". Note: this must be done
 Note: Many issues with board connectivity can simply be resolved by restarting the program and your board. Unplug your dongle, turn off the board, plug in the dongle, and turn on the board, in that order. This method works the most consistently.
 
 TODO
-
