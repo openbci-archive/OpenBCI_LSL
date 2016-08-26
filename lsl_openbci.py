@@ -14,7 +14,7 @@ from pylsl import StreamInfo,StreamOutlet
 import signal
 from collections import OrderedDict
 import time
-import gui
+
 
 
 class StreamerLSL():
@@ -22,6 +22,8 @@ class StreamerLSL():
     def __init__(self,GUI=False):
       self.default_settings = OrderedDict()
       self.current_settings = OrderedDict()
+
+      # initial settings
       self.eeg_channels = 8
       self.aux_channels = 3
 
@@ -32,6 +34,7 @@ class StreamerLSL():
         
     def initialize_board(self,autodetect=False,port=None,daisy=None):
       print ("\n-------INSTANTIATING BOARD-------")
+
       if autodetect:
         self.board = bci.OpenBCIBoard()
       else:
@@ -39,7 +42,6 @@ class StreamerLSL():
       self.eeg_channels = self.board.getNbEEGChannels()
       self.aux_channels = self.board.getNbAUXChannels()
       self.sample_rate = self.board.getSampleRate()
-      print('{} EEG channels and {} AUX channels at {} Hz'.format(self.eeg_channels, self.aux_channels,self.sample_rate))
 
     def init_board_settings(self):
       #set default board configuration
@@ -70,39 +72,71 @@ class StreamerLSL():
             time.sleep(.2)
 
     def send(self,sample):
+      try:
         self.outlet_eeg.push_sample(sample.channel_data)
         self.outlet_aux.push_sample(sample.aux_data)
+      except:
+        print("# of Channels does not match the stream! Change LSL settings")
 
     def create_lsl(self,default=True,stream1=None,stream2=None):
       if default:
-        info_eeg = StreamInfo("OpenBCI_EEG", 'EEG', self.eeg_channels, self.sample_rate,'float32',"openbci_eeg_id1");
-        info_aux = StreamInfo("OpenBCI_AUX", 'AUX', self.aux_channels,self.sample_rate,'float32',"openbci_aux_id1")
+        # parameters
+        eeg_name = 'OpenBCI_EEG'
+        eeg_type = 'EEG'
+        eeg_chan = self.eeg_channels
+        eeg_hz = self.sample_rate
+        eeg_data = 'float32'
+        eeg_id = 'openbci_eeg_id1'
+        aux_name = 'OpenBCI_AUX'
+        aux_type = 'AUX'
+        aux_chan = self.aux_channels
+        aux_hz = self.sample_rate
+        aux_data = 'float32'
+        aux_id = 'openbci_aux_id1'
+        #create StreamInfo
+        info_eeg = StreamInfo(eeg_name,eeg_type,eeg_chan,eeg_hz,eeg_data,eeg_id)
+        info_aux = StreamInfo(aux_name,aux_type,aux_chan,aux_hz,aux_data,aux_id)
+        #create StreamOutlet
         self.outlet_eeg = StreamOutlet(info_eeg)
         self.outlet_aux = StreamOutlet(info_aux)
       else:
-        info_eeg = StreamInfo(stream1['name'], stream1['type'], 
-                        stream1['channels'], stream1['sample_rate'],stream1['datatype'],stream1['id']);
-        
-        info_aux = StreamInfo(stream2['name'], stream2['type'], 
-                        stream2['channels'], stream2['sample_rate'],stream2['datatype'],stream2['id']);
+        #parameters
+        eeg_name = stream1['name']
+        eeg_type = stream1['type']
+        eeg_chan = stream1['channels']
+        eeg_hz = stream1['sample_rate']
+        eeg_data = stream1['datatype']
+        eeg_id = stream1['id']
+        aux_name = stream2['name']
+        aux_type = stream2['type']
+        aux_chan = stream2['channels']
+        aux_hz = stream2['sample_rate']
+        aux_data = stream2['datatype']
+        aux_id = stream2['id']
+        #create StreamInfo
+        info_eeg = StreamInfo(eeg_name,eeg_type,eeg_chan,eeg_hz,eeg_data,eeg_id)
+        info_aux = StreamInfo(aux_name,aux_type,aux_chan,aux_hz,aux_data,aux_id)
+        #create StreamOutlet
         self.outlet_eeg = StreamOutlet(info_eeg)
         self.outlet_aux = StreamOutlet(info_aux)
-      
-      print ("LSL Configuration: \n" + \
+        
+      print ("--------------------------------------\n"+ \
+            "LSL Configuration: \n" + \
             "  Stream 1: \n" + \
-            "      Name: OpenBCI_EEG \n" + \
-            "      Type: EEG \n" + \
-            "      Channel Count: " + str(self.eeg_channels) + "\n" + \
-            "      Sampling Rate: " + str(self.sample_rate) + "\n" + \
-            "      Channel Format: float32 \n" + \
-            "      Source Id: openbci_eeg_id1 \n" + \
+            "      Name: " + eeg_name + " \n" + \
+            "      Type: " + eeg_type + " \n" + \
+            "      Channel Count: " + str(eeg_chan) + "\n" + \
+            "      Sampling Rate: " + str(eeg_hz) + "\n" + \
+            "      Channel Format: "+ eeg_data + " \n" + \
+            "      Source Id: " + eeg_id + " \n" + \
             "  Stream 2: \n" + \
-            "      Name: OpenBCI_AUX \n" + \
-            "      Type: AUX \n" + \
-            "      Channel Count: " + str(self.aux_channels) + "\n" + \
-            "      Sampling Rate: " + str(self.sample_rate) + "\n" + \
-            "      Channel Format: float32 \n" + \
-            "      Source Id: openbci_aux_id1 \n \n")
+            "      Name: " + aux_name + " \n" + \
+            "      Type: "+ aux_type + " \n" + \
+            "      Channel Count: " + str(aux_chan) + "\n" + \
+            "      Sampling Rate: " + str(aux_hz) + "\n" + \
+            "      Channel Format: " + aux_data +" \n" + \
+            "      Source Id: " + aux_id + " \n" + \
+            "---------------------------------------\n")
 
     def cleanUp():
         board.disconnect()
@@ -113,7 +147,7 @@ class StreamerLSL():
       boardThread = threading.Thread(target=self.board.start_streaming,args=(self.send,-1))
       boardThread.daemon = True # will stop on exit
       boardThread.start()
-      print("Streaming data...")
+      print("Current streaming: {} EEG channels and {} AUX channels at {} Hz\n".format(self.eeg_channels, self.aux_channels,self.sample_rate))
     def stop_streaming(self):
       self.board.stop()
 
@@ -128,7 +162,7 @@ class StreamerLSL():
         time.sleep(0.001)
         if (c == '\n'):
             line = ''
-
+      print("Streaming paused.\n")
 
     def begin(self):
         print ("--------------INFO---------------")
@@ -216,8 +250,8 @@ class StreamerLSL():
                     line += c
                     time.sleep(0.001)
                     if (c == '\n') and not flush:
+                        print('%\t'+line[:-1])
                         line = ''
-
                 if not flush:
                     print(line)
 
@@ -231,18 +265,16 @@ class StreamerLSL():
 
 def main(argv):
   if not argv:
+    import gui
     app = QtGui.QApplication(sys.argv)
     window = gui.GUI()
     sys.exit(app.exec_())
-
   elif argv[0] == '--stream':
     lsl = StreamerLSL(GUI=False)
     lsl.create_lsl()
     lsl.begin()
   else:
     print("Command '%s' not recognized" % argv[0])
-
-
 
 if __name__ == '__main__':
   main(sys.argv[1:])
