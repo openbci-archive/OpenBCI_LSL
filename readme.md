@@ -35,7 +35,7 @@ The [OpenBCI_LSL](link) repo contains a Python script that establishes an LSL st
 
 First, make sure your dongle is plugged in and board is powered on. Then go the the "OpenBCI_LSL" folder and type the following command:
 
-`python openbci_lsl.py --stream`
+`python lsl_openbci.py --stream`
 
 After a few moments, you should see this output:
 
