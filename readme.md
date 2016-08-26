@@ -23,6 +23,8 @@ The [OpenBCI_LSL](link) repo contains a Python script that establishes an LSL st
 	`pip install -r requirements.txt`
 
 	Note: If you get the message "pip: command not found", you need to install pip: `sudo easy_install pip`. Then retry the command above.
+	
+	To use the GUI features of this application, you must separately install PyQt4 using these instructions: (Install PyQt4)[http://pyqt.sourceforge.net/Docs/PyQt4/installation.html]. The command line version of this program is still functional if PyQt4 is not installed.
 
 
 # Usage
