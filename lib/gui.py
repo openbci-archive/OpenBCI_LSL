@@ -14,6 +14,8 @@ import signal
 import threading
 import lib.streamerlsl as streamerlsl
 import lib.open_bci_v3 as bci
+import pyqtgraph as pg
+import numpy as np
 import time
 import sys
 
@@ -36,15 +38,15 @@ class GUI(QtGui.QWidget):
     
   def gui_setup(self):
     self.setWindowTitle("OpenBCI - Lab Streaming Layer")
-    self.setFixedSize(500,460)
+    self.setFixedSize(515,460)
     self.find_defaults()
     self.set_layout()
     self.show()
 
 
-  def set_layout(self):
+  def set_layout(self,monitor=False):
     #Layout
-    layout = QtGui.QGridLayout()
+    self.layout = QtGui.QGridLayout()
 
     #title font
     header_font = QtGui.QFont('default',weight=QtGui.QFont.Bold)
@@ -61,6 +63,12 @@ class GUI(QtGui.QWidget):
     board_configuration = QtGui.QPushButton("Board Config")
     board_configuration.setFixedWidth(120)
     board_configuration.clicked.connect(self.board_config)
+
+    # Display Monitor
+    self.display_monitor = QtGui.QPushButton("Show Monitor >")
+    self.display_monitor.setFixedWidth(150)
+    self.display_monitor.clicked.connect(self.show_monitor)
+
 
     #PORT
     port_label = QtGui.QLabel("Port")
@@ -101,45 +109,61 @@ class GUI(QtGui.QWidget):
     stream1_label = QtGui.QLabel("Stream 1")
     stream1_label.setFont(title_font)
     stream1_name_label = QtGui.QLabel("Name")
+    # stream1_name_label.setFixedWidth(120)
     self.stream1_name_entry = QtGui.QLineEdit()
     self.stream1_name_entry.setText("OpenBCI_EEG")
+    self.stream1_name_entry.setFixedWidth(125)
+
 
     stream1_type_label = QtGui.QLabel("Type")
     self.stream1_type_entry = QtGui.QLineEdit()
     self.stream1_type_entry.setText("EEG")
+    self.stream1_type_entry.setFixedWidth(125)
     stream1_channels_label = QtGui.QLabel("# of Channels")
     self.stream1_channels_entry  = QtGui.QLineEdit()
     self.stream1_channels_entry.setText(str(self.data_channels))
+    self.stream1_channels_entry.setFixedWidth(125)
     stream1_hz_label = QtGui.QLabel("Sample Rate")
     self.stream1_hz_entry  = QtGui.QLineEdit()
     self.stream1_hz_entry.setText(str(self.sample_rate))
+    self.stream1_hz_entry.setFixedWidth(125)
     stream1_datatype_label = QtGui.QLabel("Data Type")
     self.stream1_datatype_entry  = QtGui.QLineEdit()
     self.stream1_datatype_entry.setText("float32")
+    self.stream1_datatype_entry.setFixedWidth(125)
     stream1_streamid_label = QtGui.QLabel("Stream ID")
     self.stream1_streamid_entry  = QtGui.QLineEdit()
     self.stream1_streamid_entry.setText("openbci_eeg_id1")
+    self.stream1_streamid_entry.setFixedWidth(125)
     #stream2
     stream2_label = QtGui.QLabel("Stream 2")
     stream2_label.setFont(title_font)
     stream2_name_label = QtGui.QLabel("Name")
+    # stream2_name_label.setFixedWidth(120)
+
     self.stream2_name_entry = QtGui.QLineEdit()
     self.stream2_name_entry.setText("OpenBCI_AUX")
+    self.stream2_name_entry.setFixedWidth(125)
     stream2_type_label = QtGui.QLabel("Type")
     self.stream2_type_entry = QtGui.QLineEdit()
     self.stream2_type_entry.setText("AUX")
+    self.stream2_type_entry.setFixedWidth(125)
     stream2_channels_label = QtGui.QLabel("# of Channels")
     self.stream2_channels_entry  = QtGui.QLineEdit()
     self.stream2_channels_entry.setText(str(self.aux_channels))
+    self.stream2_channels_entry.setFixedWidth(125)
     stream2_hz_label = QtGui.QLabel("Sample Rate")
     self.stream2_hz_entry  = QtGui.QLineEdit()
     self.stream2_hz_entry.setText(str(self.sample_rate))
+    self.stream2_hz_entry.setFixedWidth(125)
     stream2_datatype_label = QtGui.QLabel("Data Type")
     self.stream2_datatype_entry  = QtGui.QLineEdit()
     self.stream2_datatype_entry.setText("float32")
+    self.stream2_datatype_entry.setFixedWidth(125)
     stream2_streamid_label = QtGui.QLabel("Stream ID")
     self.stream2_streamid_entry  = QtGui.QLineEdit()
     self.stream2_streamid_entry.setText("openbci_aux_id1")
+    self.stream2_streamid_entry.setFixedWidth(125)
 
     #Connect Board
     self.connect_button = QtGui.QPushButton("Connect Board")
@@ -164,14 +188,17 @@ class GUI(QtGui.QWidget):
 
     spacer = QtGui.QSpacerItem(20,40,QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.Expanding)
     #set layout
-    layout.addWidget(title,0,0,1,3)    
-    layout.addWidget(verticalLine0,1,0,1,4)
-    layout.addWidget(port_label,2,0)
-    layout.addWidget(self.port_entry,2,1,1,2)
-    layout.addWidget(daisy_label,3,0)
-    layout.addWidget(self.daisy_entry,3,1)
-    layout.addWidget(board_configuration,4,0,1,3)    
+    self.layout.addWidget(title,0,0,1,3)    
+    self.layout.addWidget(verticalLine0,1,0,1,4)
+    self.layout.addWidget(port_label,2,0)
+    self.layout.addWidget(self.port_entry,2,1,1,2)
+    self.layout.addWidget(daisy_label,3,0)
+    self.layout.addWidget(self.daisy_entry,3,1)
+    self.layout.addWidget(board_configuration,4,0)
+    self.layout.addWidget(self.display_monitor,4,2,1,1)
+
     #stream config area
+    stream_widget = QtGui.QWidget()
     stream_layout.addWidget(horizontalLine,1,2,7,1)
     stream_layout.addWidget(stream1_label,0,0,1,2)
     stream_layout.addWidget(stream1_name_label,1,0)
@@ -199,17 +226,34 @@ class GUI(QtGui.QWidget):
     stream_layout.addWidget(self.stream2_datatype_entry,5,4)
     stream_layout.addWidget(stream2_streamid_label,6,3)
     stream_layout.addWidget(self.stream2_streamid_entry,6,4)
-    layout.addWidget(verticalLine1,5,0,1,4)
-    layout.addLayout(stream_layout,6,0,1,4)
-    layout.addWidget(verticalLine2,7,0,1,4)
+    stream_widget.setLayout(stream_layout)
+    stream_widget.setFixedWidth(500)
+    self.layout.addWidget(verticalLine1,5,0,1,4)
+    self.layout.addWidget(stream_widget,6,0,1,4)
+    self.layout.addWidget(verticalLine2,7,0,1,4)
+    self.layout.addWidget(self.connect_button,8,0,1,1)
+    self.layout.addWidget(self.start_button,9,0,1,1)
+    self.layout.addWidget(self.console,8,1,2,1)
 
-    layout.addWidget(self.connect_button,8,0,1,1)
-    layout.addWidget(self.start_button,9,0,1,1)
-    # layout.addItem(spacer,8,2,1,1)
-    layout.addWidget(self.console,8,1,2,1)
-
-    self.setLayout(layout)
+    self.setLayout(self.layout)
   
+  def show_monitor(self):
+    self.smw = Stream_Monitor_Widget()
+    self.smw.setFixedWidth(985)
+    self.layout.addWidget(self.smw,0,3,10,1000)
+    self.setFixedSize(1500,460)
+    self.display_monitor.setText("Hide Monitor <")
+    self.display_monitor.clicked.disconnect(self.show_monitor)
+    self.display_monitor.clicked.connect(self.hide_monitor)
+
+  def hide_monitor(self):
+    self.layout.removeWidget(self.smw)
+    self.setFixedSize(510,460)
+    self.display_monitor.setText("Show Monitor >")
+    self.display_monitor.clicked.disconnect(self.hide_monitor)
+    self.display_monitor.clicked.connect(self.show_monitor)
+
+
   def find_defaults(self):
     try:
       board = bci.OpenBCIBoard(print_enable=False)
@@ -338,6 +382,26 @@ class GUI(QtGui.QWidget):
   def board_config(self):
     self.config_widget = Board_Config_Widget(parent=self)
     self.config_widget.show()
+
+class Stream_Monitor_Widget(QtGui.QWidget):
+  def __init__(self,parent=None):
+    QtGui.QWidget.__init__(self)
+    self.set_layout()
+
+  def set_layout(self):
+    self.layout = QtGui.QGridLayout()
+    self.stream_scroll = pg.PlotWidget(title='Stream Monitor')
+    self.stream_scroll_time_axis = np.linspace(-5,0,1250)
+    self.stream_scroll.setXRange(-5,-.1, padding=.01)
+    self.stream_scroll.setYRange(1,8,padding=.1)
+    self.stream_scroll.setLabel('bottom','Time','Seconds')
+    self.stream_scroll.setLabel('left','Channel')
+    self.stream_curve = self.stream_scroll.plot()
+    self.layout.addWidget(self.stream_scroll,0,0)
+    self.setLayout(self.layout)
+
+  def update_plot(self):
+    pass
 
 class Board_Config_Widget(QtGui.QWidget):
   def __init__(self,parent=None):
