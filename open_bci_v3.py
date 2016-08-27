@@ -27,9 +27,6 @@ import threading
 import sys
 import glob
 import serial.tools.list_ports
-from PyQt4.QtCore import QThread, pyqtSignal, pyqtSlot, SIGNAL
-
-
 
 SAMPLE_RATE = 250.0  # Hz
 START_BYTE = 0xA0  # start of data packet
