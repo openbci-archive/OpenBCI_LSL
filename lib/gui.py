@@ -9,7 +9,7 @@
 
 '''
 
-from collections import OrderedDict
+from collections import OrderedDict,deque
 import signal
 import threading
 import lib.streamerlsl as streamerlsl
@@ -238,7 +238,7 @@ class GUI(QtGui.QWidget):
     self.setLayout(self.layout)
   
   def show_monitor(self):
-    self.smw = Stream_Monitor_Widget()
+    self.smw = Stream_Monitor_Widget(parent=self)
     self.smw.setFixedWidth(985)
     self.layout.addWidget(self.smw,0,3,10,1000)
     self.setFixedSize(1500,460)
@@ -386,22 +386,42 @@ class GUI(QtGui.QWidget):
 class Stream_Monitor_Widget(QtGui.QWidget):
   def __init__(self,parent=None):
     QtGui.QWidget.__init__(self)
-    self.set_layout()
+    self.parent = parent
+    self.curves = OrderedDict()
+    self.data_buffer = OrderedDict()
 
-  def set_layout(self):
-    self.layout = QtGui.QGridLayout()
+    self.create_plot()
+
+
+  def create_plot(self):
+    if not self.parent.daisy_entry.currentIndex():
+      self.channel_count = 16
+      buffer_size = 625
+    else:
+      self.channel_count = 8
+      buffer_size = 1250
+
     self.stream_scroll = pg.PlotWidget(title='Stream Monitor')
-    self.stream_scroll_time_axis = np.linspace(-5,0,1250)
-    self.stream_scroll.setXRange(-5,-.1, padding=.01)
-    self.stream_scroll.setYRange(1,8,padding=.1)
+    self.stream_scroll_time_axis = np.linspace(-5,0,buffer_size)
+    self.stream_scroll.setXRange(-5,0, padding=.01)
+    self.stream_scroll.setYRange(1,self.channel_count,padding=.1)
     self.stream_scroll.setLabel('bottom','Time','Seconds')
     self.stream_scroll.setLabel('left','Channel')
-    self.stream_curve = self.stream_scroll.plot()
+    for i in range(self.channel_count):
+      self.data_buffer['buffer_channel{}'.format(i+1)] = deque([0]*buffer_size)
+      self.curves['curve_channel{}'.format(i+1)] = self.stream_scroll.plot()
+      self.curves['curve_channel{}'.format(i+1)].setData(x=self.stream_scroll_time_axis,y=([point+i+1 for point in self.data_buffer['buffer_channel{}'.format(i+1)]]))
+    
+    self.set_layout()
+  def set_layout(self):
+    self.layout = QtGui.QGridLayout()
+    
     self.layout.addWidget(self.stream_scroll,0,0)
     self.setLayout(self.layout)
 
+  @pyqtSlot('PyQt_PyObject')
   def update_plot(self):
-    pass
+    print('update')
 
 class Board_Config_Widget(QtGui.QWidget):
   def __init__(self,parent=None):
@@ -593,20 +613,6 @@ class Board_Config_Widget(QtGui.QWidget):
 
   def channel_number_select(self):
     print(self.parent.daisy_entry.currentIndex())
-    # if 
-    #   for i in range(11,19):
-    #     for j in range(self.NUM_ATTRIBUTES):
-    #         self.channel_options_layout.itemAtPosition(i,j).widget().show()
-    #     self.channel_options_layout.itemAtPosition(i,1).widget().setCurrentIndex(0)
-    #   # self.setFixedSize(700,715)
-    # elif self.parent.daisy_entry.currentIndex() == 1:
-    #   for i in range(11,19):
-    #     for j in range(self.NUM_ATTRIBUTES):
-    #         self.channel_options_layout.itemAtPosition(i,j).widget().hide()
-    #   self.channel_options_layout.itemAtPosition(i,1).widget().setCurrentIndex(1)
-        # 
-    # except:
-    #   pass
 
   def save_settings(self):
 
