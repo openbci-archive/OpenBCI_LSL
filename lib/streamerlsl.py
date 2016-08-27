@@ -1,21 +1,25 @@
-#!/usr/bin/python
 '''
-  lsl_openbci.py
+  streamerlsl.py
   ---------------
 
-  LSL is a 
+  This is the module that handles the creation and function of LSL using OpenBCI data.
+  
+  If the GUI application is used, the GUI controls the parameters of the stream, and calls
+  the functions of this class to create, run, and stop each stream instance.
+
+  If the command line application is used, this module creates the LSL instances
+  using default parameters, and then allows the user interaction with the stream via the CLI.
+
+
 '''
 
-import sys
-import open_bci_v3 as bci
 import threading
-from PyQt4 import QtGui,QtCore
-from pylsl import StreamInfo,StreamOutlet
 import signal
 from collections import OrderedDict
 import time
-
-
+import lib.open_bci_v3 as bci
+from pylsl import StreamInfo, StreamOutlet
+import sys
 
 class StreamerLSL():
 
@@ -24,8 +28,8 @@ class StreamerLSL():
       self.current_settings = OrderedDict()
 
       # initial settings
-      self.eeg_channels = 8
-      self.aux_channels = 3
+      # self.eeg_channels = 8
+      # self.aux_channels = 3
 
       if not GUI:
         if port is None:
@@ -49,10 +53,9 @@ class StreamerLSL():
 
     def init_board_settings(self):
       #set default board configuration
-      if self.eeg_channels == 16:
-        self.default_settings["Number_Channels"] = [b'C']
-      else:
-        self.default_settings["Number_Channels"] = [b'c']
+
+      #default to 16 channels initially
+      self.default_settings["Number_Channels"] = [b'C']
       for i in range(16):
         current = "channel{}".format(i+1)
         self.default_settings[current] = []
@@ -265,27 +268,3 @@ class StreamerLSL():
                 s = input('--> ')
             else:
                 s = raw_input('--> ')
-
-
-def main(argv):
-  if not argv:
-    import gui
-    app = QtGui.QApplication(sys.argv)
-    window = gui.GUI()
-    sys.exit(app.exec_())
-  else:
-    if argv[0] == '--stream':
-      lsl = StreamerLSL(GUI=False)
-      lsl.create_lsl()
-      lsl.begin()
-    else:
-      port = argv[0]
-      if argv[1] == '--stream':
-        lsl = StreamerLSL(port=port,GUI=False)
-        lsl.create_lsl()
-        lsl.begin()
-  # else:
-  #   print("Command '%s' not recognized" % argv[0])
-
-if __name__ == '__main__':
-  main(sys.argv[1:])

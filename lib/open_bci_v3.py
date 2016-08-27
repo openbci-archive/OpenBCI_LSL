@@ -82,7 +82,7 @@ class OpenBCIBoard(object):
     if print_enable:
       print("Serial established...")
     else:
-      print("Detecting default settings...")
+      print("Detecting board settings...")
     time.sleep(2)
     #Initialize 32-bit board, doesn't affect 8bit board
     self.ser.write(b'v');

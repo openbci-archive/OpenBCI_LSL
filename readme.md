@@ -5,7 +5,8 @@ This tutorial contains information on how to stream [OpenBCI](http://openbci.com
 
 Lab streaming layer is a networking system for real time streaming, recording, and analysis of time-series data. LSL can be used to connect OpenBCI to applications that can record, analyze, and manipulate the data, such as Matlab, NeuroPype, BCILAB, and others.
 
-The [OpenBCI_LSL](link) repo contains a Python script that establishes an LSL stream of OpenBCI data, as well as the libraries and files needed to run LSL.
+The [OpenBCI_LSL](link) repo contains a Python script that establishes an LSL stream of OpenBCI data, as well as the libraries and files needed to run LSL. Works on Windows, OSX, and Linux.
+
 
 
 # SETUP
@@ -35,7 +36,7 @@ The [OpenBCI_LSL](link) repo contains a Python script that establishes an LSL st
 
 First, make sure your dongle is plugged in and board is powered on. Then go the the "OpenBCI_LSL" folder and type the following command:
 
-`python lsl_openbci.py --stream`
+`python openbci_lsl.py --stream`
 
 After a few moments, you should see this output:
 
@@ -43,11 +44,11 @@ After a few moments, you should see this output:
 
 If an error is raised about not being able to find your the board or serial port, you can override the automatic board detection by specifying the serial port in a command line argument before "--stream". The format is as follows:
 
-`python lsl_openbci.py [PORT] --stream`
+`python openbci_lsl.py [PORT] --stream`
 
 For example:
 
-`python lsl_openbci.py /dev/ttyUSB0 --stream`
+`python openbci_lsl.py /dev/ttyUSB0 --stream`
 
 After board initialization, you are now ready to start streaming.
 
@@ -77,7 +78,7 @@ If you get an error message at any point while using the command line interface,
 
 If you would like the ability to configure the board and LSL stream with advanced settings, you can do so by running the GUI. The GUI comes up by default if you run the program with no flags:
 
-`python lsl_openbci.py`
+`python openbci_lsl.py`
 
 If you plug in your board and dongle before running the above command, the program should have already detected the appropriate settings for your board (port and daisy). If not, you can enter those yourself in the appropriate fields.
 

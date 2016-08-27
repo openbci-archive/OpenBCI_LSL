@@ -1,15 +1,28 @@
+'''
+  gui.py
+  ------
+
+  This module creates and controls GUI function, using the PyQt4 framework. Using the GUI,
+  the user can manipulate LSL parameters and board configuration, as well as control the 
+  creation, start, and stop of the streams.
+
+
+'''
+
 from collections import OrderedDict
 import signal
 import threading
-import lsl_openbci
-import open_bci_v3 as bci
+import lib.streamerlsl as streamerlsl
+import lib.open_bci_v3 as bci
 import time
 import sys
+
 try:
   from PyQt4 import QtGui,QtCore
 except ImportError:
-  print("GUI unavailable, use command line interface: \n" + \
-  "   python lsl_openbci.py --stream")
+  print("GUI unavailable: PyQt4 not installed. \n" + \
+    "Use command line interface: \n" + \
+  "   python lsl_openbci.py [port] --stream")
   sys.exit(0)
 
 
@@ -17,7 +30,7 @@ class GUI(QtGui.QWidget):
   def __init__(self):
     super(GUI, self).__init__()
     self.gui_setup()
-    self.lsl = lsl_openbci.StreamerLSL(GUI=True)
+    self.lsl = streamerlsl.StreamerLSL(GUI=True)
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     
