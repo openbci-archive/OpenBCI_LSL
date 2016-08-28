@@ -402,22 +402,26 @@ class Stream_Monitor_Widget(QtGui.QWidget):
 
 
   def create_plot(self):
+
+    self.stream_scroll = pg.PlotWidget(title='Stream Monitor')
+
     if not self.parent.daisy_entry.currentIndex():
       self.channel_count = 16
       self.buffer_size = 1000
+      samples = 125
+      self.stream_scroll.setYRange(-.5,16,padding=.01)
     else:
       self.channel_count = 8
       self.buffer_size = 2000
+      self.stream_scroll.setYRange(-.5,8,padding=.01)
 
-    self.stream_scroll = pg.PlotWidget(title='Stream Monitor')
-    self.stream_scroll_time_axis = np.linspace(-5,0,250)
+    self.stream_scroll_time_axis = np.linspace(-5,0,samples)
     self.stream_scroll.setXRange(-5,0, padding=.01)
-    self.stream_scroll.setYRange(-50,800,padding=.01)
     self.stream_scroll.setLabel('bottom','Time','Seconds')
     self.stream_scroll.setLabel('left','Channel')
     for i in range(self.channel_count-1,-1,-1):
       self.data_buffer['buffer_channel{}'.format(i+1)] = deque([0]*self.buffer_size)
-      self.filtered_data['filtered_channel{}'.format(i+1)] = deque([0]*250)
+      self.filtered_data['filtered_channel{}'.format(i+1)] = deque([0]*samples)
       self.curves['curve_channel{}'.format(i+1)] = self.stream_scroll.plot()
       self.curves['curve_channel{}'.format(i+1)].setData(x=self.stream_scroll_time_axis,y=([point+i+1 for point in self.filtered_data['filtered_channel{}'.format(i+1)]]))
     self.set_layout()
@@ -435,7 +439,7 @@ class Stream_Monitor_Widget(QtGui.QWidget):
       
       current = self.data_buffer['buffer_channel{}'.format(i+1)]
       current = self.filters.high_pass(current)
-      current = [((point + (i*100))) for point in current]
+      current = [((point/100 + (i+1))) for point in current]
       
       self.filtered_data['filtered_channel{}'.format(i+1)].popleft()
       self.filtered_data['filtered_channel{}'.format(i+1)].append(current[-1])
