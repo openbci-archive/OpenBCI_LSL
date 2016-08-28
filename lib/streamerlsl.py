@@ -21,7 +21,19 @@ import lib.open_bci_v3 as bci
 from pylsl import StreamInfo, StreamOutlet
 import sys
 
-class StreamerLSL():
+GUI = True
+try:
+  from PyQt4.QtCore import pyqtSignal,pyqtSlot,QThread
+except:
+  GUI = False
+
+
+class StreamerLSL(QThread if GUI == True else object):
+    try:
+      from PyQt4.QtCore import pyqtSignal,pyqtSlot,QThread
+      new_data = pyqtSignal(object)
+    except:
+      print('wo')
 
     def __init__(self,port=None,GUI=False):
       self.default_settings = OrderedDict()
@@ -30,13 +42,15 @@ class StreamerLSL():
       # initial settings
       # self.eeg_channels = 8
       # self.aux_channels = 3
-
-      if not GUI:
+      self.GUI = GUI
+      if not self.GUI:
         if port is None:
           self.initialize_board(autodetect=True)
         else:
           self.initialize_board(port=port)
-
+      else:
+        QThread.__init__(self)
+        self.count=0
       self.init_board_settings()
 
         
@@ -79,6 +93,11 @@ class StreamerLSL():
             time.sleep(.2)
 
     def send(self,sample):
+
+      if self.GUI:
+        self.count+=1
+        if self.count % 5 == 0:
+          self.new_data.emit(sample)
       try:
         self.outlet_eeg.push_sample(sample.channel_data)
         self.outlet_aux.push_sample(sample.aux_data)

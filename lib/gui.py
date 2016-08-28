@@ -11,13 +11,15 @@
 
 from collections import OrderedDict,deque
 import signal
-import threading
 import lib.streamerlsl as streamerlsl
 import lib.open_bci_v3 as bci
 import pyqtgraph as pg
 import numpy as np
 import time
 import sys
+import lib.filters as filters
+np.set_printoptions(threshold=np.inf)
+
 
 try:
   from PyQt4 import QtGui,QtCore
@@ -248,6 +250,7 @@ class GUI(QtGui.QWidget):
 
   def hide_monitor(self):
     self.layout.removeWidget(self.smw)
+    self.lsl.new_data.disconnect(self.smw.update_plot)
     self.setFixedSize(510,460)
     self.display_monitor.setText("Show Monitor >")
     self.display_monitor.clicked.disconnect(self.hide_monitor)
@@ -384,44 +387,60 @@ class GUI(QtGui.QWidget):
     self.config_widget.show()
 
 class Stream_Monitor_Widget(QtGui.QWidget):
+
   def __init__(self,parent=None):
     QtGui.QWidget.__init__(self)
     self.parent = parent
     self.curves = OrderedDict()
     self.data_buffer = OrderedDict()
-
+    self.filtered_data = OrderedDict()
     self.create_plot()
+    self.filters = filters.Filters(self.buffer_size,1,50)
+
+    self.parent.lsl.new_data.connect(self.update_plot)
+
 
 
   def create_plot(self):
     if not self.parent.daisy_entry.currentIndex():
       self.channel_count = 16
-      buffer_size = 625
+      self.buffer_size = 1000
     else:
       self.channel_count = 8
-      buffer_size = 1250
+      self.buffer_size = 2000
 
     self.stream_scroll = pg.PlotWidget(title='Stream Monitor')
-    self.stream_scroll_time_axis = np.linspace(-5,0,buffer_size)
+    self.stream_scroll_time_axis = np.linspace(-5,0,250)
     self.stream_scroll.setXRange(-5,0, padding=.01)
-    self.stream_scroll.setYRange(1,self.channel_count,padding=.1)
+    self.stream_scroll.setYRange(-50,800,padding=.01)
     self.stream_scroll.setLabel('bottom','Time','Seconds')
     self.stream_scroll.setLabel('left','Channel')
-    for i in range(self.channel_count):
-      self.data_buffer['buffer_channel{}'.format(i+1)] = deque([0]*buffer_size)
+    for i in range(self.channel_count-1,-1,-1):
+      self.data_buffer['buffer_channel{}'.format(i+1)] = deque([0]*self.buffer_size)
+      self.filtered_data['filtered_channel{}'.format(i+1)] = deque([0]*250)
       self.curves['curve_channel{}'.format(i+1)] = self.stream_scroll.plot()
-      self.curves['curve_channel{}'.format(i+1)].setData(x=self.stream_scroll_time_axis,y=([point+i+1 for point in self.data_buffer['buffer_channel{}'.format(i+1)]]))
-    
+      self.curves['curve_channel{}'.format(i+1)].setData(x=self.stream_scroll_time_axis,y=([point+i+1 for point in self.filtered_data['filtered_channel{}'.format(i+1)]]))
     self.set_layout()
+
   def set_layout(self):
     self.layout = QtGui.QGridLayout()
-    
     self.layout.addWidget(self.stream_scroll,0,0)
     self.setLayout(self.layout)
 
-  @pyqtSlot('PyQt_PyObject')
-  def update_plot(self):
-    print('update')
+  @QtCore.pyqtSlot('PyQt_PyObject')
+  def update_plot(self,data):
+    for i in range(self.channel_count):
+      self.data_buffer['buffer_channel{}'.format(i+1)].popleft()
+      self.data_buffer['buffer_channel{}'.format(i+1)].append(data.channel_data[i])
+      
+      current = self.data_buffer['buffer_channel{}'.format(i+1)]
+      current = self.filters.high_pass(current)
+      current = [((point + (i*100))) for point in current]
+      
+      self.filtered_data['filtered_channel{}'.format(i+1)].popleft()
+      self.filtered_data['filtered_channel{}'.format(i+1)].append(current[-1])
+      filtered = self.filtered_data['filtered_channel{}'.format(i+1)]
+      self.curves['curve_channel{}'.format(i+1)].setData(x=self.stream_scroll_time_axis,y=([point for point in filtered]))
 
 class Board_Config_Widget(QtGui.QWidget):
   def __init__(self,parent=None):
