@@ -412,6 +412,7 @@ class Stream_Monitor_Widget(QtGui.QWidget):
       self.stream_scroll.setYRange(-.5,16,padding=.01)
     else:
       self.channel_count = 8
+      samples = 250
       self.buffer_size = 2000
       self.stream_scroll.setYRange(-.5,8,padding=.01)
 

@@ -39,9 +39,6 @@ class StreamerLSL(QThread if GUI == True else object):
       self.default_settings = OrderedDict()
       self.current_settings = OrderedDict()
 
-      # initial settings
-      # self.eeg_channels = 8
-      # self.aux_channels = 3
       self.GUI = GUI
       if not self.GUI:
         if port is None:
