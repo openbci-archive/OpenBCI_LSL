@@ -21,22 +21,33 @@ import lib.open_bci_v3 as bci
 from pylsl import StreamInfo, StreamOutlet
 import sys
 
-class StreamerLSL():
+GUI = True
+try:
+  from PyQt4.QtCore import pyqtSignal,pyqtSlot,QThread
+except:
+  GUI = False
+
+
+class StreamerLSL(QThread if GUI == True else object):
+    try:
+      from PyQt4.QtCore import pyqtSignal,pyqtSlot,QThread
+      new_data = pyqtSignal(object)
+    except:
+      print('wo')
 
     def __init__(self,port=None,GUI=False):
       self.default_settings = OrderedDict()
       self.current_settings = OrderedDict()
 
-      # initial settings
-      # self.eeg_channels = 8
-      # self.aux_channels = 3
-
-      if not GUI:
+      self.GUI = GUI
+      if not self.GUI:
         if port is None:
           self.initialize_board(autodetect=True)
         else:
           self.initialize_board(port=port)
-
+      else:
+        QThread.__init__(self)
+        self.count=0
       self.init_board_settings()
 
         
@@ -79,6 +90,11 @@ class StreamerLSL():
             time.sleep(.2)
 
     def send(self,sample):
+
+      if self.GUI:
+        self.count+=1
+        if self.count % 5 == 0:
+          self.new_data.emit(sample)
       try:
         self.outlet_eeg.push_sample(sample.channel_data)
         self.outlet_aux.push_sample(sample.aux_data)
@@ -87,7 +103,7 @@ class StreamerLSL():
 
     def create_lsl(self,default=True,stream1=None,stream2=None):
       if default:
-        # parameters
+        # default parameters
         eeg_name = 'OpenBCI_EEG'
         eeg_type = 'EEG'
         eeg_chan = self.eeg_channels
@@ -103,11 +119,8 @@ class StreamerLSL():
         #create StreamInfo
         info_eeg = StreamInfo(eeg_name,eeg_type,eeg_chan,eeg_hz,eeg_data,eeg_id)
         info_aux = StreamInfo(aux_name,aux_type,aux_chan,aux_hz,aux_data,aux_id)
-        #create StreamOutlet
-        self.outlet_eeg = StreamOutlet(info_eeg)
-        self.outlet_aux = StreamOutlet(info_aux)
       else:
-        #parameters
+        #user input parameters
         eeg_name = stream1['name']
         eeg_type = stream1['type']
         eeg_chan = stream1['channels']
@@ -123,9 +136,27 @@ class StreamerLSL():
         #create StreamInfo
         info_eeg = StreamInfo(eeg_name,eeg_type,eeg_chan,eeg_hz,eeg_data,eeg_id)
         info_aux = StreamInfo(aux_name,aux_type,aux_chan,aux_hz,aux_data,aux_id)
-        #create StreamOutlet
-        self.outlet_eeg = StreamOutlet(info_eeg)
-        self.outlet_aux = StreamOutlet(info_aux)
+      
+
+      #channel locations
+      chns = info_eeg.desc().append_child('channels')
+      if self.eeg_channels == 16:
+        labels = ['Fp1','Fp2', 'C3','C4','T5','T6','O1','O2','F7','F8','F3','F4','T3','T4','P3','P4']
+      else:
+        labels = ['Fp1','Fp2', 'C3','C4','T5','T6','O1','O2']
+      for label in labels:
+        ch = chns.append_child("channel")
+        ch.append_child_value('label', label)
+        ch.append_child_value('unit','microvolts')
+        ch.append_child_value('type','EEG')
+
+      #additional Meta Data
+      info_eeg.desc().append_child_value('manufacturer','OpenBCI Inc.')
+      info_aux.desc().append_child_value('manufacturer','OpenBCI Inc.')
+
+      #create StreamOutlet
+      self.outlet_eeg = StreamOutlet(info_eeg)
+      self.outlet_aux = StreamOutlet(info_aux)
         
       print ("--------------------------------------\n"+ \
             "LSL Configuration: \n" + \
