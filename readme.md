@@ -16,7 +16,7 @@ If you're having any issues, please see the [Troubleshooting](#TROUBLESHOOTING) 
 
 2. **Download and install [Python](https://www.python.org/downloads/) (either version 2 or 3).**
 
-	Python might already be installed on your computer. Type `python --version` to check if you have Python version 2.7+ installed. 
+	Python might already be installed on your computer. Type `python --version` to check if you have Python version 2 or 3 installed. 
 
 3. **Install Python requirements**
 
