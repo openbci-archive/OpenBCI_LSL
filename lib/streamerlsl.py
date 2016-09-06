@@ -20,6 +20,7 @@ import time
 import lib.open_bci_v3 as bci
 from pylsl import StreamInfo, StreamOutlet
 import sys
+import random
 
 GUI = True
 try:
@@ -103,19 +104,20 @@ class StreamerLSL(QThread if GUI == True else object):
 
     def create_lsl(self,default=True,stream1=None,stream2=None):
       if default:
+        random_id = random.randint(0,255)
         # default parameters
-        eeg_name = 'OpenBCI_EEG'
+        eeg_name = 'openbci_eeg'
         eeg_type = 'EEG'
         eeg_chan = self.eeg_channels
         eeg_hz = self.sample_rate
         eeg_data = 'float32'
-        eeg_id = 'openbci_eeg_id1'
+        eeg_id = 'openbci_eeg_id' + str(random_id)
         aux_name = 'OpenBCI_AUX'
         aux_type = 'AUX'
         aux_chan = self.aux_channels
         aux_hz = self.sample_rate
         aux_data = 'float32'
-        aux_id = 'openbci_aux_id1'
+        aux_id = 'openbci_aux_id' + str(random_id)
         #create StreamInfo
         self.info_eeg = StreamInfo(eeg_name,eeg_type,eeg_chan,eeg_hz,eeg_data,eeg_id)
         self.info_aux = StreamInfo(aux_name,aux_type,aux_chan,aux_hz,aux_data,aux_id)
