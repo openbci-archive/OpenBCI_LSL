@@ -1,1 +1,1 @@
-Please make sure that you have the most recent binaries from liblsl/bin/ in here.
+This directory contains the necessary binary files needed to run the Lab Streaming Layer.
