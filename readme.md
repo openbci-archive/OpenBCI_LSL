@@ -35,7 +35,7 @@ If you're having any issues, please see the [Troubleshooting](#TROUBLESHOOTING) 
 
 #### Simple Stream
 
-First, make sure your dongle is plugged in and board is powered on. Then go the the "OpenBCI_LSL" folder and type the following command:
+**First, make sure your dongle is plugged in and board is powered on.** Then go the the "OpenBCI_LSL" folder and type the following command:
 
 `python openbci_lsl.py --stream`
 
