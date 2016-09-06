@@ -20,6 +20,7 @@ import time
 import lib.open_bci_v3 as bci
 from pylsl import StreamInfo, StreamOutlet
 import sys
+import random
 
 GUI = True
 try:
@@ -33,7 +34,7 @@ class StreamerLSL(QThread if GUI == True else object):
       from PyQt4.QtCore import pyqtSignal,pyqtSlot,QThread
       new_data = pyqtSignal(object)
     except:
-      print('wo')
+      pass
 
     def __init__(self,port=None,GUI=False):
       self.default_settings = OrderedDict()
@@ -99,26 +100,27 @@ class StreamerLSL(QThread if GUI == True else object):
         self.outlet_eeg.push_sample(sample.channel_data)
         self.outlet_aux.push_sample(sample.aux_data)
       except:
-        print("# of Channels does not match the stream! Change LSL settings")
+        print("Error! Check LSL settings")
 
     def create_lsl(self,default=True,stream1=None,stream2=None):
       if default:
+        random_id = random.randint(0,255)
         # default parameters
-        eeg_name = 'OpenBCI_EEG'
+        eeg_name = 'openbci_eeg'
         eeg_type = 'EEG'
         eeg_chan = self.eeg_channels
         eeg_hz = self.sample_rate
         eeg_data = 'float32'
-        eeg_id = 'openbci_eeg_id1'
+        eeg_id = 'openbci_eeg_id' + str(random_id)
         aux_name = 'OpenBCI_AUX'
         aux_type = 'AUX'
         aux_chan = self.aux_channels
         aux_hz = self.sample_rate
         aux_data = 'float32'
-        aux_id = 'openbci_aux_id1'
+        aux_id = 'openbci_aux_id' + str(random_id)
         #create StreamInfo
-        info_eeg = StreamInfo(eeg_name,eeg_type,eeg_chan,eeg_hz,eeg_data,eeg_id)
-        info_aux = StreamInfo(aux_name,aux_type,aux_chan,aux_hz,aux_data,aux_id)
+        self.info_eeg = StreamInfo(eeg_name,eeg_type,eeg_chan,eeg_hz,eeg_data,eeg_id)
+        self.info_aux = StreamInfo(aux_name,aux_type,aux_chan,aux_hz,aux_data,aux_id)
       else:
         #user input parameters
         eeg_name = stream1['name']
@@ -134,12 +136,12 @@ class StreamerLSL(QThread if GUI == True else object):
         aux_data = stream2['datatype']
         aux_id = stream2['id']
         #create StreamInfo
-        info_eeg = StreamInfo(eeg_name,eeg_type,eeg_chan,eeg_hz,eeg_data,eeg_id)
-        info_aux = StreamInfo(aux_name,aux_type,aux_chan,aux_hz,aux_data,aux_id)
+        self.info_eeg = StreamInfo(eeg_name,eeg_type,eeg_chan,eeg_hz,eeg_data,eeg_id)
+        self.info_aux = StreamInfo(aux_name,aux_type,aux_chan,aux_hz,aux_data,aux_id)
       
 
       #channel locations
-      chns = info_eeg.desc().append_child('channels')
+      chns = self.info_eeg.desc().append_child('channels')
       if self.eeg_channels == 16:
         labels = ['Fp1','Fp2', 'C3','C4','T5','T6','O1','O2','F7','F8','F3','F4','T3','T4','P3','P4']
       else:
@@ -151,12 +153,12 @@ class StreamerLSL(QThread if GUI == True else object):
         ch.append_child_value('type','EEG')
 
       #additional Meta Data
-      info_eeg.desc().append_child_value('manufacturer','OpenBCI Inc.')
-      info_aux.desc().append_child_value('manufacturer','OpenBCI Inc.')
+      self.info_eeg.desc().append_child_value('manufacturer','OpenBCI Inc.')
+      self.info_aux.desc().append_child_value('manufacturer','OpenBCI Inc.')
 
       #create StreamOutlet
-      self.outlet_eeg = StreamOutlet(info_eeg)
-      self.outlet_aux = StreamOutlet(info_aux)
+      self.outlet_eeg = StreamOutlet(self.info_eeg)
+      self.outlet_aux = StreamOutlet(self.info_aux)
         
       print ("--------------------------------------\n"+ \
             "LSL Configuration: \n" + \
@@ -173,7 +175,9 @@ class StreamerLSL(QThread if GUI == True else object):
             "      Channel Count: " + str(aux_chan) + "\n" + \
             "      Sampling Rate: " + str(aux_hz) + "\n" + \
             "      Channel Format: " + aux_data +" \n" + \
-            "      Source Id: " + aux_id + " \n" + \
+            "      Source Id: " + aux_id + " \n\n" + \
+            "Electrode Location Montage:\n" + \
+            str(labels) + "\n" + \
             "---------------------------------------\n")
 
     def cleanUp():
@@ -270,6 +274,10 @@ class StreamerLSL(QThread if GUI == True else object):
                         self.board.stop()
                         rec = True
                         flush = True
+                    elif('loc' in s):
+                        self.change_locations(s[4:])
+                        rec = True
+                        flush = True
                     if rec == False:
                         print("Command not recognized...")
 
@@ -299,3 +307,21 @@ class StreamerLSL(QThread if GUI == True else object):
                 s = input('--> ')
             else:
                 s = raw_input('--> ')
+    
+    def change_locations(self,locs):
+      new_locs = [loc for loc in locs.split(',')]
+
+      chns = self.info_eeg.desc().child('channels')
+      ch = chns.child("channel")
+      for label in new_locs:
+        ch.set_child_value('label', label)
+        ch = ch.next_sibling()
+
+      
+      print("New Channel Montage:")
+      print(str(new_locs))
+
+
+      #create StreamOutlet
+      self.outlet_eeg = StreamOutlet(self.info_eeg)
+      self.outlet_aux = StreamOutlet(self.info_aux)

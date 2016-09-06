@@ -7,6 +7,7 @@ Lab streaming layer is a networking system for real time streaming, recording, a
 
 The [OpenBCI_LSL](link) repo contains a Python script that establishes an LSL stream of OpenBCI data, as well as the libraries and files needed to run LSL. Works on Windows, OSX, and Linux.
 
+If you're having any issues, please see the [Troubleshooting](#TROUBLESHOOTING) section of this document. If your issue is not listed there, raise an issue on this Github repo.
 
 
 # SETUP
@@ -74,6 +75,14 @@ To view current board and register settings, enter: `--> ?`
 
 If you get an error message at any point while using the command line interface, check the [Troubleshooting](#troubleshooting) section, or pull up an issue on the Github repository.
 
+#### Changing Channel Locations from the command line interface
+
+To change the channel location metadata of the stream, type `/loc` followed by a space and then a comma-separated list of new set of channel locations. For example, to change the default channel locations to a new set of eight channels, the command might look like this:
+
+`-->/loc F3,F4,C3,C4,T3,T4,P3,P4`
+
+This can only be done while the board is not currently streaming.
+
 ## GUI
 
 If you would like the ability to configure the board and LSL stream with advanced settings, you can do so by running the GUI. The GUI comes up by default if you run the program with no flags:
@@ -97,5 +106,3 @@ To change the channel settings, click on "Board Config". Note: this must be done
 # Troubleshooting
 
 Note: Many issues with board connectivity can simply be resolved by restarting the program and your board. Unplug your dongle, turn off the board, plug in the dongle, and turn on the board, in that order. This method works the most consistently.
-
-TODO
