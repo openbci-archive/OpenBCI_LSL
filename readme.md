@@ -5,7 +5,7 @@ This tutorial contains information on how to stream [OpenBCI](http://openbci.com
 
 Lab streaming layer is a networking system for real time streaming, recording, and analysis of time-series data. LSL can be used to connect OpenBCI to applications that can record, analyze, and manipulate the data, such as Matlab, NeuroPype, BCILAB, and others.
 
-The [OpenBCI_LSL](link) repo contains a Python script that establishes an LSL stream of OpenBCI data, as well as the libraries and files needed to run LSL. Works on Windows, OSX, and Linux.
+The [OpenBCI_LSL](link) repo contains a Python script that establishes an LSL stream of OpenBCI data, as well as the libraries and files needed to run LSL. This program is compatible on Windows, OSX, and Linux.
 
 If you're having any issues, please see the [Troubleshooting](#TROUBLESHOOTING) section of this document. If your issue is not listed there, raise an issue on this Github repo.
 
