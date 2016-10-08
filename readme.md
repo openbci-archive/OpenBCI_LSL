@@ -20,10 +20,22 @@ If you're having any issues, please see the [Troubleshooting](#TROUBLESHOOTING) 
 
 3. **Install Python requirements**
 
-	Navigate to the "OpenBCI_LSL" folder on your command line and terminal, and type:
+	To use this program, you need the following Python packages installed:
+	
+	-pylsl (version 1.10.5 or greater)
+	-pyserial (version 3.1.1 or greater)
+	-numpy (version 1.11.1 or greater)
+	-pyqtgraph (version 0.9.10 or greater) (optional: needded for GUI functionality only)
+	-scipy (version 0.17.1 or greater) (optional: needed for GUI functionality only)
+	
+	
+
+	To automatically install using pip, navigate to the "OpenBCI_LSL" folder on your command line and terminal, and type:
 
 	`pip install -r requirements.txt`
 
+	Note: `pip` may have issues install numpy and scipy for some users. Install these manually if you have issues.
+	
 	Note: If you get the message "pip: command not found", you need to install pip: `sudo easy_install pip`. Then retry the command above.
 	
 	To use the GUI features of this application, you must separately install PyQt4 using these instructions: [Install PyQt4](http://pyqt.sourceforge.net/Docs/PyQt4/installation.html). The command line version of this program is still functional if PyQt4 is not installed.
