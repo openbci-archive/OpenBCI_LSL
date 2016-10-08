@@ -112,7 +112,7 @@ class StreamerLSL(QThread if GUI == True else object):
         eeg_hz = self.sample_rate
         eeg_data = 'float32'
         eeg_id = 'openbci_eeg_id' + str(random_id)
-        aux_name = 'OpenBCI_AUX'
+        aux_name = 'openbci_aux'
         aux_type = 'AUX'
         aux_chan = self.aux_channels
         aux_hz = self.sample_rate
