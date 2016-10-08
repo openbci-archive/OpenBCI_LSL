@@ -23,9 +23,13 @@ If you're having any issues, please see the [Troubleshooting](#TROUBLESHOOTING) 
 	To use this program, you need the following Python packages installed:
 	
 	-pylsl (version 1.10.5 or greater)
+	
 	-pyserial (version 3.1.1 or greater)
+	
 	-numpy (version 1.11.1 or greater)
+	
 	-pyqtgraph (version 0.9.10 or greater) (optional: needded for GUI functionality only)
+	
 	-scipy (version 0.17.1 or greater) (optional: needed for GUI functionality only)
 	
 	
