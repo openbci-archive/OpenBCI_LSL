@@ -12,7 +12,7 @@ If you're having any issues, please see the [Troubleshooting](#TROUBLESHOOTING) 
 
 # SETUP
 
-1. **Download or clone the [OpenBCI_LSL](link) repo from Github**
+1. **Download or clone the [OpenBCI_LSL](https://github.com/OpenBCI/OpenBCI_LSL) repo from Github**
 
 2. **Download and install [Python](https://www.python.org/downloads/) (either version 2 or 3).**
 
