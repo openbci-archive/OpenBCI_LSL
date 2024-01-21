@@ -29,8 +29,8 @@ def main(argv):
   # if no arguments are provided, default to the GUI application
   if not argv:
     import lib.gui as gui
-    from PyQt4 import QtGui
-    app = QtGui.QApplication(sys.argv)
+    from PyQt5.QtWidgets import QApplication
+    app = QApplication(sys.argv)
     window = gui.GUI()
     sys.exit(app.exec_())
  

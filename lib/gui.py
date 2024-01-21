@@ -2,9 +2,10 @@
   gui.py
   ------
 
-  This module creates and controls GUI function, using the PyQt4 framework. Using the GUI,
+  This module creates and controls GUI function, using the PyQt5 framework. Using the GUI,
   the user can manipulate LSL parameters and board configuration, as well as control the 
   creation, start, and stop of the streams.
+  Updated from PyQt4 to PyQt5 on 1/21/24 by Mir Jeffres.
 
 
 '''
@@ -22,15 +23,15 @@ np.set_printoptions(threshold=np.inf)
 
 
 try:
-  from PyQt4 import QtGui,QtCore
+  from PyQt5 import QtCore, QtWidgets, QtGui
 except ImportError:
-  print("GUI unavailable: PyQt4 not installed. \n" + \
+  print("GUI unavailable: PyQt5 not installed. \n" + \
     "Use command line interface: \n" + \
   "   python lsl_openbci.py [port] --stream")
   sys.exit(0)
 
 
-class GUI(QtGui.QWidget):
+class GUI(QtWidgets.QWidget):
   def __init__(self):
     super(GUI, self).__init__()
     self.gui_setup()
@@ -48,7 +49,7 @@ class GUI(QtGui.QWidget):
 
   def set_layout(self,monitor=False):
     #Layout
-    self.layout = QtGui.QGridLayout()
+    self.layout = QtWidgets.QGridLayout()
 
     #title font
     header_font = QtGui.QFont('default',weight=QtGui.QFont.Bold)
@@ -57,30 +58,30 @@ class GUI(QtGui.QWidget):
     title_font.setUnderline(True)
 
 
-    title = QtGui.QLabel("OpenBCI - Lab Streaming Layer")
+    title = QtWidgets.QLabel("OpenBCI - Lab Streaming Layer")
     title.setFont(header_font)
 
 
     #Board Configuration
-    board_configuration = QtGui.QPushButton("Board Config")
+    board_configuration = QtWidgets.QPushButton("Board Config")
     board_configuration.setFixedWidth(120)
     board_configuration.clicked.connect(self.board_config)
 
     # Display Monitor
-    self.display_monitor = QtGui.QPushButton("Show Monitor >")
+    self.display_monitor = QtWidgets.QPushButton("Show Monitor >")
     self.display_monitor.setFixedWidth(150)
     self.display_monitor.clicked.connect(self.show_monitor)
 
 
     #PORT
-    port_label = QtGui.QLabel("Port")
-    self.port_entry = QtGui.QLineEdit()
+    port_label = QtWidgets.QLabel("Port")
+    self.port_entry = QtWidgets.QLineEdit()
     self.port_entry.setFixedWidth(150)
     self.port_entry.setText(self.port)
 
     #DAISY
-    daisy_label = QtGui.QLabel("Daisy (16 chan)")
-    self.daisy_entry = QtGui.QComboBox()
+    daisy_label = QtWidgets.QLabel("Daisy (16 chan)")
+    self.daisy_entry = QtWidgets.QComboBox()
     self.daisy_entry.addItem("Enabled")
     self.daisy_entry.addItem("Disabled")
     self.daisy_entry.setFixedWidth(100)
@@ -90,105 +91,105 @@ class GUI(QtGui.QWidget):
       self.daisy_entry.setCurrentIndex(1)
 
     #lines and separators
-    verticalLine0 = QtGui.QFrame()
-    verticalLine0.setFrameShape(QtGui.QFrame().HLine)
-    verticalLine0.setFrameShadow(QtGui.QFrame().Sunken)
-    verticalLine1 = QtGui.QFrame()
-    verticalLine1.setFrameShape(QtGui.QFrame().HLine)
-    verticalLine1.setFrameShadow(QtGui.QFrame().Sunken)
-    verticalLine2 = QtGui.QFrame()
-    verticalLine2.setFrameShape(QtGui.QFrame().HLine)
-    verticalLine2.setFrameShadow(QtGui.QFrame().Sunken)
-    horizontalLine = QtGui.QFrame()
-    horizontalLine.setFrameShape(QtGui.QFrame().VLine)
-    horizontalLine.setFrameShadow(QtGui.QFrame().Sunken)
+    verticalLine0 = QtWidgets.QFrame()
+    verticalLine0.setFrameShape(QtWidgets.QFrame().HLine)
+    verticalLine0.setFrameShadow(QtWidgets.QFrame().Sunken)
+    verticalLine1 = QtWidgets.QFrame()
+    verticalLine1.setFrameShape(QtWidgets.QFrame().HLine)
+    verticalLine1.setFrameShadow(QtWidgets.QFrame().Sunken)
+    verticalLine2 = QtWidgets.QFrame()
+    verticalLine2.setFrameShape(QtWidgets.QFrame().HLine)
+    verticalLine2.setFrameShadow(QtWidgets.QFrame().Sunken)
+    horizontalLine = QtWidgets.QFrame()
+    horizontalLine.setFrameShape(QtWidgets.QFrame().VLine)
+    horizontalLine.setFrameShadow(QtWidgets.QFrame().Sunken)
 
 
     #STREAM CONFIG
-    stream_layout = QtGui.QGridLayout()
+    stream_layout = QtWidgets.QGridLayout()
     title_font.setUnderline(True)
     #stream 1
-    stream1_label = QtGui.QLabel("Stream 1")
+    stream1_label = QtWidgets.QLabel("Stream 1")
     stream1_label.setFont(title_font)
-    stream1_name_label = QtGui.QLabel("Name")
+    stream1_name_label = QtWidgets.QLabel("Name")
     # stream1_name_label.setFixedWidth(120)
-    self.stream1_name_entry = QtGui.QLineEdit()
+    self.stream1_name_entry = QtWidgets.QLineEdit()
     self.stream1_name_entry.setText("OpenBCI_EEG")
     self.stream1_name_entry.setFixedWidth(125)
 
 
-    stream1_type_label = QtGui.QLabel("Type")
-    self.stream1_type_entry = QtGui.QLineEdit()
+    stream1_type_label = QtWidgets.QLabel("Type")
+    self.stream1_type_entry = QtWidgets.QLineEdit()
     self.stream1_type_entry.setText("EEG")
     self.stream1_type_entry.setFixedWidth(125)
-    stream1_channels_label = QtGui.QLabel("# of Channels")
-    self.stream1_channels_entry  = QtGui.QLineEdit()
+    stream1_channels_label = QtWidgets.QLabel("# of Channels")
+    self.stream1_channels_entry  = QtWidgets.QLineEdit()
     self.stream1_channels_entry.setText(str(self.data_channels))
     self.stream1_channels_entry.setFixedWidth(125)
-    stream1_hz_label = QtGui.QLabel("Sample Rate")
-    self.stream1_hz_entry  = QtGui.QLineEdit()
+    stream1_hz_label = QtWidgets.QLabel("Sample Rate")
+    self.stream1_hz_entry  = QtWidgets.QLineEdit()
     self.stream1_hz_entry.setText(str(self.sample_rate))
     self.stream1_hz_entry.setFixedWidth(125)
-    stream1_datatype_label = QtGui.QLabel("Data Type")
-    self.stream1_datatype_entry  = QtGui.QLineEdit()
+    stream1_datatype_label = QtWidgets.QLabel("Data Type")
+    self.stream1_datatype_entry  = QtWidgets.QLineEdit()
     self.stream1_datatype_entry.setText("float32")
     self.stream1_datatype_entry.setFixedWidth(125)
-    stream1_streamid_label = QtGui.QLabel("Stream ID")
-    self.stream1_streamid_entry  = QtGui.QLineEdit()
+    stream1_streamid_label = QtWidgets.QLabel("Stream ID")
+    self.stream1_streamid_entry  = QtWidgets.QLineEdit()
     self.stream1_streamid_entry.setText("openbci_eeg_id1")
     self.stream1_streamid_entry.setFixedWidth(125)
     #stream2
-    stream2_label = QtGui.QLabel("Stream 2")
+    stream2_label = QtWidgets.QLabel("Stream 2")
     stream2_label.setFont(title_font)
-    stream2_name_label = QtGui.QLabel("Name")
+    stream2_name_label = QtWidgets.QLabel("Name")
     # stream2_name_label.setFixedWidth(120)
 
-    self.stream2_name_entry = QtGui.QLineEdit()
+    self.stream2_name_entry = QtWidgets.QLineEdit()
     self.stream2_name_entry.setText("OpenBCI_AUX")
     self.stream2_name_entry.setFixedWidth(125)
-    stream2_type_label = QtGui.QLabel("Type")
-    self.stream2_type_entry = QtGui.QLineEdit()
+    stream2_type_label = QtWidgets.QLabel("Type")
+    self.stream2_type_entry = QtWidgets.QLineEdit()
     self.stream2_type_entry.setText("AUX")
     self.stream2_type_entry.setFixedWidth(125)
-    stream2_channels_label = QtGui.QLabel("# of Channels")
-    self.stream2_channels_entry  = QtGui.QLineEdit()
+    stream2_channels_label = QtWidgets.QLabel("# of Channels")
+    self.stream2_channels_entry  = QtWidgets.QLineEdit()
     self.stream2_channels_entry.setText(str(self.aux_channels))
     self.stream2_channels_entry.setFixedWidth(125)
-    stream2_hz_label = QtGui.QLabel("Sample Rate")
-    self.stream2_hz_entry  = QtGui.QLineEdit()
+    stream2_hz_label = QtWidgets.QLabel("Sample Rate")
+    self.stream2_hz_entry  = QtWidgets.QLineEdit()
     self.stream2_hz_entry.setText(str(self.sample_rate))
     self.stream2_hz_entry.setFixedWidth(125)
-    stream2_datatype_label = QtGui.QLabel("Data Type")
-    self.stream2_datatype_entry  = QtGui.QLineEdit()
+    stream2_datatype_label = QtWidgets.QLabel("Data Type")
+    self.stream2_datatype_entry  = QtWidgets.QLineEdit()
     self.stream2_datatype_entry.setText("float32")
     self.stream2_datatype_entry.setFixedWidth(125)
-    stream2_streamid_label = QtGui.QLabel("Stream ID")
-    self.stream2_streamid_entry  = QtGui.QLineEdit()
+    stream2_streamid_label = QtWidgets.QLabel("Stream ID")
+    self.stream2_streamid_entry  = QtWidgets.QLineEdit()
     self.stream2_streamid_entry.setText("openbci_aux_id1")
     self.stream2_streamid_entry.setFixedWidth(125)
 
     #Connect Board
-    self.connect_button = QtGui.QPushButton("Connect Board")
+    self.connect_button = QtWidgets.QPushButton("Connect Board")
     self.connect_button.clicked.connect(self.connect_board)
     self.connect_button.setFixedWidth(150)
     #Start Streaming
-    self.start_button = QtGui.QPushButton("Start Streaming")
+    self.start_button = QtWidgets.QPushButton("Start Streaming")
     self.start_button.clicked.connect(self.init_streaming)
     self.start_button.setEnabled(False)
     self.start_button.setFixedWidth(150)
 
     #Console
-    self.console = QtGui.QLineEdit()
+    self.console = QtWidgets.QLineEdit()
     self.console.setStyleSheet("font-family:Times;font-size:17px;color: rgb(255, 255, 255);background: rgb(0, 0, 0)")
     self.console.setReadOnly(True)
-    self.consoleSizePolicy = QtGui.QSizePolicy()
-    self.consoleSizePolicy.setVerticalPolicy(QtGui.QSizePolicy.Expanding)
+    self.consoleSizePolicy = QtWidgets.QSizePolicy()
+    self.consoleSizePolicy.setVerticalPolicy(QtWidgets.QSizePolicy.Expanding)
     self.console.setSizePolicy(self.consoleSizePolicy)
     self.console.setFixedWidth(300)
     self.console.setText("  --")
     # self.console.setAlignment(QtCore.Qt.AlignRight)
 
-    spacer = QtGui.QSpacerItem(20,40,QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.Expanding)
+    spacer = QtWidgets.QSpacerItem(20,40,QtWidgets.QSizePolicy.Minimum,QtWidgets.QSizePolicy.Expanding)
     #set layout
     self.layout.addWidget(title,0,0,1,3)    
     self.layout.addWidget(verticalLine0,1,0,1,4)
@@ -200,7 +201,7 @@ class GUI(QtGui.QWidget):
     self.layout.addWidget(self.display_monitor,4,2,1,1)
 
     #stream config area
-    stream_widget = QtGui.QWidget()
+    stream_widget = QtWidgets.QWidget()
     stream_layout.addWidget(horizontalLine,1,2,7,1)
     stream_layout.addWidget(stream1_label,0,0,1,2)
     stream_layout.addWidget(stream1_name_label,1,0)
@@ -386,10 +387,10 @@ class GUI(QtGui.QWidget):
     self.config_widget = Board_Config_Widget(parent=self)
     self.config_widget.show()
 
-class Stream_Monitor_Widget(QtGui.QWidget):
+class Stream_Monitor_Widget(QtWidgets.QWidget):
 
   def __init__(self,parent=None):
-    QtGui.QWidget.__init__(self)
+    QtWidgets.QWidget.__init__(self)
     self.parent = parent
     self.curves = OrderedDict()
     self.data_buffer = OrderedDict()
@@ -428,7 +429,7 @@ class Stream_Monitor_Widget(QtGui.QWidget):
     self.set_layout()
 
   def set_layout(self):
-    self.layout = QtGui.QGridLayout()
+    self.layout = QtWidgets.QGridLayout()
     self.layout.addWidget(self.stream_scroll,0,0)
     self.setLayout(self.layout)
 
@@ -447,9 +448,9 @@ class Stream_Monitor_Widget(QtGui.QWidget):
       filtered = self.filtered_data['filtered_channel{}'.format(i+1)]
       self.curves['curve_channel{}'.format(i+1)].setData(x=self.stream_scroll_time_axis,y=([point for point in filtered]))
 
-class Board_Config_Widget(QtGui.QWidget):
+class Board_Config_Widget(QtWidgets.QWidget):
   def __init__(self,parent=None):
-    QtGui.QWidget.__init__(self)
+    QtWidgets.QWidget.__init__(self)
     self.parent = parent
     self.lsl = parent.lsl
     self.setFixedSize(700,715)
@@ -457,20 +458,20 @@ class Board_Config_Widget(QtGui.QWidget):
     self.set_layout()
   
   def set_layout(self):    
-    self.layout = QtGui.QGridLayout()
-    self.channel_options_layout = QtGui.QGridLayout()
+    self.layout = QtWidgets.QGridLayout()
+    self.channel_options_layout = QtWidgets.QGridLayout()
 
-    verticalLine0 = QtGui.QFrame()
-    verticalLine0.setFrameShape(QtGui.QFrame().HLine)
-    verticalLine0.setFrameShadow(QtGui.QFrame().Sunken)
-    verticalLine1 = QtGui.QFrame()
-    verticalLine1.setFrameShape(QtGui.QFrame().HLine)
-    verticalLine1.setFrameShadow(QtGui.QFrame().Sunken)
-    verticalLine2 = QtGui.QFrame()
-    verticalLine2.setFrameShape(QtGui.QFrame().HLine)
-    verticalLine2.setFrameShadow(QtGui.QFrame().Sunken)
+    verticalLine0 = QtWidgets.QFrame()
+    verticalLine0.setFrameShape(QtWidgets.QFrame().HLine)
+    verticalLine0.setFrameShadow(QtWidgets.QFrame().Sunken)
+    verticalLine1 = QtWidgets.QFrame()
+    verticalLine1.setFrameShape(QtWidgets.QFrame().HLine)
+    verticalLine1.setFrameShadow(QtWidgets.QFrame().Sunken)
+    verticalLine2 = QtWidgets.QFrame()
+    verticalLine2.setFrameShape(QtWidgets.QFrame().HLine)
+    verticalLine2.setFrameShadow(QtWidgets.QFrame().Sunken)
     #Title
-    title = QtGui.QLabel("Board Settings")
+    title = QtWidgets.QLabel("Board Settings")
     title_font = QtGui.QFont('default',weight=QtGui.QFont.Bold)
     title_font.setPointSize(12)
     title.setFont(title_font)
@@ -484,14 +485,14 @@ class Board_Config_Widget(QtGui.QWidget):
       daisy = False
     #Channel Number
     if daisy:
-      channel_number = QtGui.QLabel("Number of Channels: {}  [Daisy {}]".format("16", "Enabled"))
+      channel_number = QtWidgets.QLabel("Number of Channels: {}  [Daisy {}]".format("16", "Enabled"))
     else:
-      channel_number = QtGui.QLabel("Number of Channels: {}  [Daisy {}]".format("8", "Disabled"))
+      channel_number = QtWidgets.QLabel("Number of Channels: {}  [Daisy {}]".format("8", "Disabled"))
 
 
     #SD Card Options
-    sd_label = QtGui.QLabel("SD Card Record:")
-    self.sd_entry = QtGui.QComboBox()
+    sd_label = QtWidgets.QLabel("SD Card Record:")
+    self.sd_entry = QtWidgets.QComboBox()
     self.sd_entry.addItem("None")
     self.sd_entry.addItem("5 MIN")
     self.sd_entry.addItem("15 MIN")
@@ -504,7 +505,7 @@ class Board_Config_Widget(QtGui.QWidget):
     self.sd_entry.addItem("14 SEC")
 
     #Save Button
-    save_button = QtGui.QPushButton("Save Settings")
+    save_button = QtWidgets.QPushButton("Save Settings")
     save_button.clicked.connect(self.save_settings)
 
     #Set rest of the layout
@@ -532,19 +533,19 @@ class Board_Config_Widget(QtGui.QWidget):
     header_font.setPointSize(8)
 
     #Option Headers
-    channel_number = QtGui.QLabel("CHANNEL")
+    channel_number = QtWidgets.QLabel("CHANNEL")
     option_headers.append(channel_number)
-    channel_power = QtGui.QLabel("POWER")
+    channel_power = QtWidgets.QLabel("POWER")
     option_headers.append(channel_power)
-    channel_gain = QtGui.QLabel("GAIN")
+    channel_gain = QtWidgets.QLabel("GAIN")
     option_headers.append(channel_gain)
-    channel_input = QtGui.QLabel("INPUT")
+    channel_input = QtWidgets.QLabel("INPUT")
     option_headers.append(channel_input)
-    channel_bias = QtGui.QLabel("BIAS")
+    channel_bias = QtWidgets.QLabel("BIAS")
     option_headers.append(channel_bias)
-    channel_srb2 = QtGui.QLabel("SRB2")
+    channel_srb2 = QtWidgets.QLabel("SRB2")
     option_headers.append(channel_srb2)
-    channel_srb1 = QtGui.QLabel("SRB1")
+    channel_srb1 = QtWidgets.QLabel("SRB1")
     option_headers.append(channel_srb1)
 
 
@@ -560,15 +561,15 @@ class Board_Config_Widget(QtGui.QWidget):
         self.channels[current][attribute.format(i+1)] = ''
         current_attribute = attribute.format(i+1)
         if j == 0:
-          self.channels[current][current_attribute] = QtGui.QLabel("Channel {}".format(i+1))
+          self.channels[current][current_attribute] = QtWidgets.QLabel("Channel {}".format(i+1))
         elif j == 1:
-          self.channels[current][current_attribute] = QtGui.QComboBox()
+          self.channels[current][current_attribute] = QtWidgets.QComboBox()
           self.channels[current][current_attribute].addItem("On")
           self.channels[current][current_attribute].addItem("Off")
           index = int((self.lsl.current_settings[current][j+1]).decode())
           self.channels[current][current_attribute].setCurrentIndex(index)
         elif j == 2:
-          self.channels[current][current_attribute] = QtGui.QComboBox()
+          self.channels[current][current_attribute] = QtWidgets.QComboBox()
           self.channels[current][current_attribute].addItem("0")
           self.channels[current][current_attribute].addItem("2")
           self.channels[current][current_attribute].addItem("4")
@@ -579,7 +580,7 @@ class Board_Config_Widget(QtGui.QWidget):
           index = int((self.lsl.current_settings[current][j+1]).decode())
           self.channels[current][current_attribute].setCurrentIndex(index)
         elif j == 3:
-          self.channels[current][current_attribute] = QtGui.QComboBox()
+          self.channels[current][current_attribute] = QtWidgets.QComboBox()
           self.channels[current][current_attribute].addItem("Normal")
           self.channels[current][current_attribute].addItem("Shorted")
           self.channels[current][current_attribute].addItem("Bias Meas")
@@ -591,19 +592,19 @@ class Board_Config_Widget(QtGui.QWidget):
           index = int((self.lsl.current_settings[current][j+1]).decode())
           self.channels[current][current_attribute].setCurrentIndex(index)
         elif j == 4:
-          self.channels[current][current_attribute] = QtGui.QComboBox()
+          self.channels[current][current_attribute] = QtWidgets.QComboBox()
           self.channels[current][current_attribute].addItem("Include")
           self.channels[current][current_attribute].addItem("Don't Include")
           index = 1 - int((self.lsl.current_settings[current][j+1]).decode())
           self.channels[current][current_attribute].setCurrentIndex(index)
         elif j == 5:
-          self.channels[current][current_attribute] = QtGui.QComboBox()
+          self.channels[current][current_attribute] = QtWidgets.QComboBox()
           self.channels[current][current_attribute].addItem("Connect")
           self.channels[current][current_attribute].addItem("Disconnect")
           index = 1 - int((self.lsl.current_settings[current][j+1]).decode())
           self.channels[current][current_attribute].setCurrentIndex(index)
         elif j == 6:
-          self.channels[current][current_attribute] = QtGui.QComboBox()
+          self.channels[current][current_attribute] = QtWidgets.QComboBox()
           self.channels[current][current_attribute].addItem("Disconnect")
           self.channels[current][current_attribute].addItem("Connect")
           index = int((self.lsl.current_settings[current][j+1]).decode())
